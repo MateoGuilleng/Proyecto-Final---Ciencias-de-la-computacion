@@ -9,8 +9,8 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * Vista principal de AutoRescate 24/7 (Swing, patrón MVC).
- * Solo captura eventos y delega al {@link ControlVista}.
+ * Vista principal de AutoRescate 24/7 (Swing, patrón MVC). Solo captura eventos
+ * y delega al {@link ControlVista}.
  *
  * @author AutoRescate 24/7
  */
@@ -20,24 +20,38 @@ public class VistaPrincipal extends JFrame {
     private JTextArea areaTexto;
     private JMenuBar menuBar;
 
-    /** Construye la ventana sin hacerla visible. */
+    /**
+     * Construye la ventana sin hacerla visible.
+     */
     public VistaPrincipal() {
         super("AutoRescate 24/7 - Sistema de Gestión");
         inicializarComponentes();
     }
 
-    /** Asigna el controlador de vista. */
-    public void setControlVista(ControlVista cv) { this.cv = cv; }
+    /**
+     * Asigna el controlador de vista.
+     */
+    public void setControlVista(ControlVista cv) {
+        this.cv = cv;
+    }
 
-    /** Hace visible la ventana. */
-    public void mostrar() { setVisible(true); }
+    /**
+     * Hace visible la ventana.
+     */
+    public void mostrar() {
+        setVisible(true);
+    }
 
-    /** Muestra un diálogo de información. */
+    /**
+     * Muestra un diálogo de información.
+     */
     public void mostrarMensaje(String msg) {
         JOptionPane.showMessageDialog(this, msg, "AutoRescate 24/7", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    /** Actualiza el área de texto principal. */
+    /**
+     * Actualiza el área de texto principal.
+     */
     public void actualizarAreaTexto(String texto) {
         areaTexto.setText(texto);
         areaTexto.setCaretPosition(0);
@@ -96,45 +110,45 @@ public class VistaPrincipal extends JFrame {
     // =========================================================================
     private void construirMenuTecnicos() {
         JMenu m = new JMenu("Técnicos");
-        addItem(m, "Registrar",       () -> dialogoRegistrarTecnico());
+        addItem(m, "Registrar", () -> dialogoRegistrarTecnico());
         addItem(m, "Consultar todos", () -> cv.accionConsultarTecnicos());
-        addItem(m, "Buscar por ID",   () -> dialogoBuscarTecnico());
-        addItem(m, "Cambiar Estado",  () -> dialogoCambiarEstadoTecnico());
-        addItem(m, "Eliminar Técnico",() -> dialogoEliminarTecnico());
+        addItem(m, "Buscar por ID", () -> dialogoBuscarTecnico());
+        addItem(m, "Cambiar Estado", () -> dialogoCambiarEstadoTecnico());
+        addItem(m, "Eliminar Técnico", () -> dialogoEliminarTecnico());
         menuBar.add(m);
     }
 
     private void construirMenuUnidades() {
         JMenu m = new JMenu("Unidades");
-        addItem(m, "Registrar",       () -> dialogoRegistrarUnidad());
+        addItem(m, "Registrar", () -> dialogoRegistrarUnidad());
         addItem(m, "Consultar todas", () -> cv.accionConsultarUnidades());
-        addItem(m, "Cambiar Estado",  () -> dialogoCambiarEstadoUnidad());
+        addItem(m, "Cambiar Estado", () -> dialogoCambiarEstadoUnidad());
         addItem(m, "Eliminar Unidad", () -> dialogoEliminarUnidad());
         menuBar.add(m);
     }
 
     private void construirMenuClientes() {
         JMenu m = new JMenu("Clientes");
-        addItem(m, "Registrar",       () -> dialogoRegistrarCliente());
-        addItem(m, "Ver clientes",    () -> cv.accionConsultarClientes());
-        addItem(m, "Buscar por ID",   () -> dialogoBuscarCliente());
-        addItem(m, "Eliminar Cliente",() -> dialogoEliminarCliente());
+        addItem(m, "Registrar", () -> dialogoRegistrarCliente());
+        addItem(m, "Ver clientes", () -> cv.accionConsultarClientes());
+        addItem(m, "Buscar por ID", () -> dialogoBuscarCliente());
+        addItem(m, "Eliminar Cliente", () -> dialogoEliminarCliente());
         menuBar.add(m);
     }
 
     private void construirMenuSolicitudes() {
         JMenu m = new JMenu("Solicitudes");
-        addItem(m, "Registrar",          () -> dialogoRegistrarSolicitud());
-        addItem(m, "Consultar todas",    () -> cv.accionConsultarSolicitudes());
+        addItem(m, "Registrar", () -> dialogoRegistrarSolicitud());
+        addItem(m, "Consultar todas", () -> cv.accionConsultarSolicitudes());
         addItem(m, "Eliminar solicitud", () -> dialogoEliminarSolicitud());
         menuBar.add(m);
     }
 
     private void construirMenuKits() {
         JMenu m = new JMenu("Kits");
-        addItem(m, "Agregar kit",          () -> cv.accionAgregarKit());
-        addItem(m, "Consultar kits",       () -> cv.accionConsultarKits());
-        addItem(m, "Revisar kit en cima",  () -> dialogoRevisarKit());
+        addItem(m, "Agregar kit", () -> cv.accionAgregarKit());
+        addItem(m, "Consultar kits", () -> cv.accionConsultarKits());
+        addItem(m, "Revisar kit en cima", () -> dialogoRevisarKit());
         menuBar.add(m);
     }
 
@@ -147,11 +161,13 @@ public class VistaPrincipal extends JFrame {
     private void construirMenuReportes() {
         JMenu m = new JMenu("Reportes");
         addItem(m, "Ver reporte general", () -> cv.accionVerReporte());
-        addItem(m, "Exportar CSV",        () -> cv.accionExportarCSV());
+        addItem(m, "Exportar CSV", () -> cv.accionExportarCSV());
         menuBar.add(m);
     }
 
-    /** Utilidad para agregar ítems de menú con lambda. */
+    /**
+     * Utilidad para agregar ítems de menú con lambda.
+     */
     private void addItem(JMenu menu, String texto, Runnable accion) {
         JMenuItem item = new JMenuItem(texto);
         item.addActionListener(e -> accion.run());
@@ -173,20 +189,25 @@ public class VistaPrincipal extends JFrame {
 
     private void dialogoBuscarTecnico() {
         String id = JOptionPane.showInputDialog(this, "ID del técnico:", "Buscar Técnico", JOptionPane.QUESTION_MESSAGE);
-        if (id != null && !id.isBlank()) cv.accionBuscarTecnico(id.trim());
+        if (id != null && !id.isBlank()) {
+            cv.accionBuscarTecnico(id.trim());
+        }
     }
 
     private void dialogoCambiarEstadoTecnico() {
         JTextField fId = new JTextField();
         JComboBox<String> combo = new JComboBox<>(new String[]{"DISPONIBLE", "OCUPADO"});
         if (JOptionPane.showConfirmDialog(this, new Object[]{"ID del Técnico:", fId, "Nuevo Estado:", combo},
-                "Cambiar Estado Técnico", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION)
+                "Cambiar Estado Técnico", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
             cv.accionCambiarEstadoTecnico(fId.getText().trim(), (String) combo.getSelectedItem());
+        }
     }
 
     private void dialogoEliminarTecnico() {
         String id = JOptionPane.showInputDialog(this, "ID del técnico a eliminar:", "Eliminar Técnico", JOptionPane.QUESTION_MESSAGE);
-        if (id != null && !id.isBlank()) cv.accionEliminarTecnico(id.trim());
+        if (id != null && !id.isBlank()) {
+            cv.accionEliminarTecnico(id.trim());
+        }
     }
 
     // =========================================================================
@@ -196,21 +217,25 @@ public class VistaPrincipal extends JFrame {
         JComboBox<String> comboTipo = new JComboBox<>(new String[]{"GRUA", "MOTO", "CAMIONETA", "VEHICULO_LIVIANO"});
         JTextField fZona = new JTextField();
         if (JOptionPane.showConfirmDialog(this, new Object[]{"Tipo:", comboTipo, "Zona:", fZona},
-                "Registrar Unidad", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION)
+                "Registrar Unidad", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
             cv.accionRegistrarUnidad((String) comboTipo.getSelectedItem(), fZona.getText());
+        }
     }
 
     private void dialogoCambiarEstadoUnidad() {
         JTextField fId = new JTextField();
         JComboBox<String> combo = new JComboBox<>(new String[]{"DISPONIBLE", "OCUPADO", "MANTENIMIENTO"});
         if (JOptionPane.showConfirmDialog(this, new Object[]{"ID de la Unidad:", fId, "Nuevo Estado:", combo},
-                "Cambiar Estado Unidad", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION)
+                "Cambiar Estado Unidad", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
             cv.accionCambiarEstadoUnidad(fId.getText().trim(), (String) combo.getSelectedItem());
+        }
     }
 
     private void dialogoEliminarUnidad() {
         String id = JOptionPane.showInputDialog(this, "ID de la unidad a eliminar:", "Eliminar Unidad", JOptionPane.QUESTION_MESSAGE);
-        if (id != null && !id.isBlank()) cv.accionEliminarUnidad(id.trim());
+        if (id != null && !id.isBlank()) {
+            cv.accionEliminarUnidad(id.trim());
+        }
     }
 
     // =========================================================================
@@ -229,12 +254,16 @@ public class VistaPrincipal extends JFrame {
 
     private void dialogoBuscarCliente() {
         String id = JOptionPane.showInputDialog(this, "ID del cliente:", "Buscar Cliente", JOptionPane.QUESTION_MESSAGE);
-        if (id != null && !id.isBlank()) cv.accionBuscarCliente(id.trim());
+        if (id != null && !id.isBlank()) {
+            cv.accionBuscarCliente(id.trim());
+        }
     }
 
     private void dialogoEliminarCliente() {
         String id = JOptionPane.showInputDialog(this, "ID del cliente a eliminar:", "Eliminar Cliente", JOptionPane.QUESTION_MESSAGE);
-        if (id != null && !id.isBlank()) cv.accionEliminarCliente(id.trim());
+        if (id != null && !id.isBlank()) {
+            cv.accionEliminarCliente(id.trim());
+        }
     }
 
     // =========================================================================
@@ -246,15 +275,15 @@ public class VistaPrincipal extends JFrame {
         JComboBox<SolicitudServicio.Zona> comboZona = new JComboBox<>(SolicitudServicio.Zona.values());
 
         JLabel lblInfo = new JLabel(getInfoTipoServicio((Tecnico.TipoServicio) comboTipo.getSelectedItem()));
-        comboTipo.addActionListener(e ->
-            lblInfo.setText(getInfoTipoServicio((Tecnico.TipoServicio) comboTipo.getSelectedItem()))
+        comboTipo.addActionListener(e
+                -> lblInfo.setText(getInfoTipoServicio((Tecnico.TipoServicio) comboTipo.getSelectedItem()))
         );
 
         if (JOptionPane.showConfirmDialog(this,
                 new Object[]{"ID del Cliente:", fClienteId,
-                             "Tipo de servicio:", comboTipo,
-                             "Especialidad requerida:", lblInfo,
-                             "Zona del incidente:", comboZona},
+                    "Tipo de servicio:", comboTipo,
+                    "Especialidad requerida:", lblInfo,
+                    "Zona del incidente:", comboZona},
                 "Registrar Solicitud", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
             Tecnico.TipoServicio ts = (Tecnico.TipoServicio) comboTipo.getSelectedItem();
             SolicitudServicio.Zona z = (SolicitudServicio.Zona) comboZona.getSelectedItem();
@@ -264,15 +293,22 @@ public class VistaPrincipal extends JFrame {
 
     private void dialogoEliminarSolicitud() {
         String id = JOptionPane.showInputDialog(this, "ID de la solicitud a eliminar:", "Eliminar Solicitud", JOptionPane.QUESTION_MESSAGE);
-        if (id != null && !id.isBlank()) cv.accionEliminarSolicitud(id.trim());
+        if (id != null && !id.isBlank()) {
+            cv.accionEliminarSolicitud(id.trim());
+        }
     }
 
-    /** Texto informativo de la especialidad requerida para un tipo de servicio. */
+    /**
+     * Texto informativo de la especialidad requerida para un tipo de servicio.
+     */
     private String getInfoTipoServicio(Tecnico.TipoServicio ts) {
-        if (ts == null) return "";
-        return ts.getEspecialidadRequerida().getNombre() + "  |  "
-                + ts.getEspecialidadRequerida().getDuracionMinMin() + "-"
-                + ts.getEspecialidadRequerida().getDuracionMaxMin() + " min";
+        if (ts == null) {
+            return "";
+        } else {
+            return ts.getEspecialidadRequerida().getNombre() + "  |  "
+                    + ts.getEspecialidadRequerida().getDuracionMinMin() + "-"
+                    + ts.getEspecialidadRequerida().getDuracionMaxMin() + " min";
+        }
     }
 
     // =========================================================================
@@ -283,18 +319,24 @@ public class VistaPrincipal extends JFrame {
         int sel = JOptionPane.showOptionDialog(this,
                 "¿Qué se hace con el kit en revisión?", "Revisar Kit",
                 JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, opciones, opciones[0]);
-        if (sel == 0) cv.accionRevisarKitEnCima("REPARAR");
-        else if (sel == 1) cv.accionRevisarKitEnCima("REPONER");
-        else if (sel == 2) cv.accionRevisarKitEnCima("NADA");
+        if (sel == 0) {
+            cv.accionRevisarKitEnCima("REPARAR");
+        } else if (sel == 1) {
+            cv.accionRevisarKitEnCima("REPONER");
+        } else if (sel == 2) {
+            cv.accionRevisarKitEnCima("NADA");
+        }
     }
 
     // =========================================================================
     // DIÁLOGO - IMPORTAR DATOS DE PRUEBA
     // =========================================================================
-    private void dialogoImportarDatosPrueba() {        JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
+    private void dialogoImportarDatosPrueba() {
+        JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
         fc.setDialogTitle("Seleccionar archivo de datos de prueba");
         fc.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Archivos CSV (*.csv)", "csv"));
-        if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+        if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             cv.accionImportarDatosPrueba(fc.getSelectedFile().getAbsolutePath());
+        }
     }
 }

@@ -5,6 +5,7 @@
 package co.udistrital.modelo.estructuras;
 
 public class Cola<T> {
+
     private Nodo<T> frente;
     private Nodo<T> fondo;
 
@@ -27,13 +28,14 @@ public class Cola<T> {
     public T desencolar() {
         if (estaVacia()) {
             return null;
+        } else {
+            T dato = this.frente.getDato();
+            this.frente = this.frente.getSiguiente();
+            if (this.frente == null) {
+                this.fondo = null;
+            }
+            return dato;
         }
-        T dato = this.frente.getDato();
-        this.frente = this.frente.getSiguiente();
-        if (this.frente == null) {
-            this.fondo = null;
-        }
-        return dato;
     }
 
     public boolean estaVacia() {
@@ -42,10 +44,14 @@ public class Cola<T> {
 
     /**
      * Devuelve el dato del frente de la cola sin desencolar.
+     *
      * @return El dato del frente, o {@code null} si está vacía.
      */
     public T verFrente() {
-        if (estaVacia()) return null;
-        return this.frente.getDato();
+        if (estaVacia()) {
+            return null;
+        } else {
+            return this.frente.getDato();
+        }
     }
 }

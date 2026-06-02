@@ -1,1 +1,2 @@
-id,cliente,descripcion,prioridad,estado
+id,cliente,tipoServicio,prioridad,estado
+1,Carlos Mendoza,Vehículo varado,ORDINARIA,COMPLETADA

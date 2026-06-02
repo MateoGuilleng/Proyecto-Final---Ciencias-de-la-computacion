@@ -5,6 +5,7 @@
 package co.udistrital.modelo.estructuras;
 
 public class Nodo<T> {
+
     private T dato;
     private Nodo<T> siguiente;
 

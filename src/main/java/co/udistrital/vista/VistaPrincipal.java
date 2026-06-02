@@ -1,11 +1,12 @@
 package co.udistrital.vista;
 
 import co.udistrital.control.ControlVista;
+import co.udistrital.modelo.entidades.Tecnico;
 import co.udistrital.modelo.entidades.SolicitudServicio;
+import co.udistrital.modelo.entidades.Cliente;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 
 /**
  * Vista principal de AutoRescate 24/7 (Swing, patrón MVC).
@@ -99,6 +100,7 @@ public class VistaPrincipal extends JFrame {
         addItem(m, "Consultar todos", () -> cv.accionConsultarTecnicos());
         addItem(m, "Buscar por ID",   () -> dialogoBuscarTecnico());
         addItem(m, "Cambiar Estado",  () -> dialogoCambiarEstadoTecnico());
+        addItem(m, "Eliminar Técnico",() -> dialogoEliminarTecnico());
         menuBar.add(m);
     }
 
@@ -107,23 +109,24 @@ public class VistaPrincipal extends JFrame {
         addItem(m, "Registrar",       () -> dialogoRegistrarUnidad());
         addItem(m, "Consultar todas", () -> cv.accionConsultarUnidades());
         addItem(m, "Cambiar Estado",  () -> dialogoCambiarEstadoUnidad());
+        addItem(m, "Eliminar Unidad", () -> dialogoEliminarUnidad());
         menuBar.add(m);
     }
 
     private void construirMenuClientes() {
         JMenu m = new JMenu("Clientes");
         addItem(m, "Registrar",       () -> dialogoRegistrarCliente());
+        addItem(m, "Ver clientes",    () -> cv.accionConsultarClientes());
         addItem(m, "Buscar por ID",   () -> dialogoBuscarCliente());
+        addItem(m, "Eliminar Cliente",() -> dialogoEliminarCliente());
         menuBar.add(m);
     }
 
     private void construirMenuSolicitudes() {
         JMenu m = new JMenu("Solicitudes");
-        addItem(m, "Registrar",           () -> dialogoRegistrarSolicitud());
-        addItem(m, "Consultar todas",     () -> cv.accionConsultarSolicitudes());
-        m.addSeparator();
-        addItem(m, "Atender siguiente",   () -> dialogoAtenderSiguiente());
-        addItem(m, "Completar servicio",  () -> dialogoCompletarServicio());
+        addItem(m, "Registrar",          () -> dialogoRegistrarSolicitud());
+        addItem(m, "Consultar todas",    () -> cv.accionConsultarSolicitudes());
+        addItem(m, "Eliminar solicitud", () -> dialogoEliminarSolicitud());
         menuBar.add(m);
     }
 
@@ -159,10 +162,13 @@ public class VistaPrincipal extends JFrame {
     // DIÁLOGOS - TÉCNICOS
     // =========================================================================
     private void dialogoRegistrarTecnico() {
-        JTextField fNombre = new JTextField(), fEsp = new JTextField();
-        if (JOptionPane.showConfirmDialog(this, new Object[]{"Nombre:", fNombre, "Especialidad:", fEsp},
-                "Registrar Técnico", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION)
-            cv.accionRegistrarTecnico(fNombre.getText(), fEsp.getText());
+        JTextField fNombre = new JTextField();
+        JComboBox<String> comboEsp = new JComboBox<>(cv.obtenerNombresEspecialidad());
+        if (JOptionPane.showConfirmDialog(this,
+                new Object[]{"Nombre:", fNombre, "Especialidad:", comboEsp},
+                "Registrar Técnico", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
+            cv.accionRegistrarTecnico(fNombre.getText(), (String) comboEsp.getSelectedItem());
+        }
     }
 
     private void dialogoBuscarTecnico() {
@@ -176,6 +182,11 @@ public class VistaPrincipal extends JFrame {
         if (JOptionPane.showConfirmDialog(this, new Object[]{"ID del Técnico:", fId, "Nuevo Estado:", combo},
                 "Cambiar Estado Técnico", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION)
             cv.accionCambiarEstadoTecnico(fId.getText().trim(), (String) combo.getSelectedItem());
+    }
+
+    private void dialogoEliminarTecnico() {
+        String id = JOptionPane.showInputDialog(this, "ID del técnico a eliminar:", "Eliminar Técnico", JOptionPane.QUESTION_MESSAGE);
+        if (id != null && !id.isBlank()) cv.accionEliminarTecnico(id.trim());
     }
 
     // =========================================================================
@@ -197,14 +208,23 @@ public class VistaPrincipal extends JFrame {
             cv.accionCambiarEstadoUnidad(fId.getText().trim(), (String) combo.getSelectedItem());
     }
 
+    private void dialogoEliminarUnidad() {
+        String id = JOptionPane.showInputDialog(this, "ID de la unidad a eliminar:", "Eliminar Unidad", JOptionPane.QUESTION_MESSAGE);
+        if (id != null && !id.isBlank()) cv.accionEliminarUnidad(id.trim());
+    }
+
     // =========================================================================
     // DIÁLOGOS - CLIENTES
     // =========================================================================
     private void dialogoRegistrarCliente() {
         JTextField fNombre = new JTextField(), fTel = new JTextField();
-        if (JOptionPane.showConfirmDialog(this, new Object[]{"Nombre:", fNombre, "Teléfono:", fTel},
-                "Registrar Cliente", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION)
-            cv.accionRegistrarCliente(fNombre.getText(), fTel.getText());
+        JComboBox<Cliente.TipoCliente> comboTipo = new JComboBox<>(Cliente.TipoCliente.values());
+        if (JOptionPane.showConfirmDialog(this,
+                new Object[]{"Nombre:", fNombre, "Teléfono:", fTel, "Tipo:", comboTipo},
+                "Registrar Cliente", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
+            cv.accionRegistrarCliente(fNombre.getText(), fTel.getText(),
+                    ((Cliente.TipoCliente) comboTipo.getSelectedItem()).name());
+        }
     }
 
     private void dialogoBuscarCliente() {
@@ -212,57 +232,47 @@ public class VistaPrincipal extends JFrame {
         if (id != null && !id.isBlank()) cv.accionBuscarCliente(id.trim());
     }
 
+    private void dialogoEliminarCliente() {
+        String id = JOptionPane.showInputDialog(this, "ID del cliente a eliminar:", "Eliminar Cliente", JOptionPane.QUESTION_MESSAGE);
+        if (id != null && !id.isBlank()) cv.accionEliminarCliente(id.trim());
+    }
+
     // =========================================================================
     // DIÁLOGOS - SOLICITUDES
     // =========================================================================
     private void dialogoRegistrarSolicitud() {
-        JTextField fClienteId = new JTextField(), fDesc = new JTextField();
-        JComboBox<String> comboPrio = new JComboBox<>(new String[]{"ORDINARIA", "CRITICA"});
+        JTextField fClienteId = new JTextField();
+        JComboBox<Tecnico.TipoServicio> comboTipo = new JComboBox<>(Tecnico.TipoServicio.values());
+        JComboBox<SolicitudServicio.Zona> comboZona = new JComboBox<>(SolicitudServicio.Zona.values());
+
+        JLabel lblInfo = new JLabel(getInfoTipoServicio((Tecnico.TipoServicio) comboTipo.getSelectedItem()));
+        comboTipo.addActionListener(e ->
+            lblInfo.setText(getInfoTipoServicio((Tecnico.TipoServicio) comboTipo.getSelectedItem()))
+        );
+
         if (JOptionPane.showConfirmDialog(this,
-                new Object[]{"ID del Cliente:", fClienteId, "Descripción:", fDesc, "Prioridad:", comboPrio},
-                "Registrar Solicitud", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION)
-            cv.accionRegistrarSolicitud(fClienteId.getText().trim(), fDesc.getText(), (String) comboPrio.getSelectedItem());
-    }
-
-    /**
-     * Muestra la siguiente solicitud en cola y, si el usuario confirma,
-     * pide técnico, unidad y si desea kit. Solo desencola si se asignan recursos.
-     */
-    private void dialogoAtenderSiguiente() {
-        SolicitudServicio sol = cv.accionVerSiguienteSolicitud();
-        if (sol == null) return;
-
-        // Mostrar info de la solicitud
-        String info = "Solicitud a atender:\n"
-                + "  ID: " + sol.getId() + "\n"
-                + "  Cliente: " + sol.getCliente().getNombre() + "\n"
-                + "  Descripción: " + sol.getDescripcion() + "\n"
-                + "  Prioridad: " + sol.getPrioridad() + "\n\n"
-                + "¿Desea asignar recursos ahora?";
-
-        int confirmar = JOptionPane.showConfirmDialog(this, info, "Atender Siguiente", JOptionPane.YES_NO_OPTION);
-        if (confirmar != JOptionPane.YES_OPTION) return;
-
-        // Pedir técnico y unidad
-        JTextField fTecnico = new JTextField(), fUnidad = new JTextField();
-        JComboBox<String> comboKit = new JComboBox<>(new String[]{"No", "Sí"});
-        int res = JOptionPane.showConfirmDialog(this,
-                new Object[]{
-                    "ID del Técnico:", fTecnico,
-                    "ID de la Unidad:", fUnidad,
-                    "¿Agregar kit de atención rápida?", comboKit
-                },
-                "Asignar Recursos - Sol. " + sol.getId(), JOptionPane.OK_CANCEL_OPTION);
-
-        if (res == JOptionPane.OK_OPTION) {
-            boolean usarKit = "Sí".equals(comboKit.getSelectedItem());
-            cv.accionAsignarRecursosASiguiente(fTecnico.getText().trim(), fUnidad.getText().trim(), usarKit);
+                new Object[]{"ID del Cliente:", fClienteId,
+                             "Tipo de servicio:", comboTipo,
+                             "Especialidad requerida:", lblInfo,
+                             "Zona del incidente:", comboZona},
+                "Registrar Solicitud", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
+            Tecnico.TipoServicio ts = (Tecnico.TipoServicio) comboTipo.getSelectedItem();
+            SolicitudServicio.Zona z = (SolicitudServicio.Zona) comboZona.getSelectedItem();
+            cv.accionRegistrarSolicitud(fClienteId.getText().trim(), ts.name(), z.name());
         }
     }
 
-    private void dialogoCompletarServicio() {
-        String id = JOptionPane.showInputDialog(this, "ID de la solicitud a completar:", "Completar Servicio", JOptionPane.QUESTION_MESSAGE);
-        if (id != null && !id.isBlank()) cv.accionCompletarServicio(id.trim());
+    private void dialogoEliminarSolicitud() {
+        String id = JOptionPane.showInputDialog(this, "ID de la solicitud a eliminar:", "Eliminar Solicitud", JOptionPane.QUESTION_MESSAGE);
+        if (id != null && !id.isBlank()) cv.accionEliminarSolicitud(id.trim());
+    }
+
+    /** Texto informativo de la especialidad requerida para un tipo de servicio. */
+    private String getInfoTipoServicio(Tecnico.TipoServicio ts) {
+        if (ts == null) return "";
+        return ts.getEspecialidadRequerida().getNombre() + "  |  "
+                + ts.getEspecialidadRequerida().getDuracionMinMin() + "-"
+                + ts.getEspecialidadRequerida().getDuracionMaxMin() + " min";
     }
 
     // =========================================================================
@@ -281,8 +291,7 @@ public class VistaPrincipal extends JFrame {
     // =========================================================================
     // DIÁLOGO - IMPORTAR DATOS DE PRUEBA
     // =========================================================================
-    private void dialogoImportarDatosPrueba() {
-        JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
+    private void dialogoImportarDatosPrueba() {        JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
         fc.setDialogTitle("Seleccionar archivo de datos de prueba");
         fc.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Archivos CSV (*.csv)", "csv"));
         if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)

@@ -1,7 +1,6 @@
 package co.udistrital.control;
 
 import co.udistrital.modelo.entidades.*;
-import co.udistrital.modelo.entidades.SolicitudServicio.Prioridad;
 import co.udistrital.modelo.entidades.UnidadServicio.EstadoUnidad;
 import co.udistrital.modelo.entidades.UnidadServicio.TipoUnidad;
 import co.udistrital.modelo.entidades.Tecnico.EstadoTecnico;
@@ -32,14 +31,29 @@ public class ControlVista {
 
     // ---- TÉCNICOS ----
 
+    /** Nombres de las especialidades para combos en la vista. */
+    public String[] obtenerNombresEspecialidad() {
+        Tecnico.Especialidad[] valores = Tecnico.Especialidad.values();
+        String[] nombres = new String[valores.length];
+        for (int i = 0; i < valores.length; i++) {
+            nombres[i] = valores[i].name();
+        }
+        return nombres;
+    }
+
     /** Registra técnico. */
     public void accionRegistrarTecnico(String nombre, String especialidad) {
         if (nombre == null || nombre.isBlank() || especialidad == null || especialidad.isBlank()) {
             vista.mostrarMensaje("Error: Nombre y especialidad son obligatorios."); return;
         }
-        Tecnico t = cp.registrarTecnico(nombre.trim(), especialidad.trim());
-        vista.mostrarMensaje("Técnico registrado: " + t);
-        vista.actualizarAreaTexto(listarTecnicos());
+        try {
+            Tecnico.Especialidad esp = Tecnico.Especialidad.valueOf(especialidad.toUpperCase().replace(" ", "_"));
+            Tecnico t = cp.registrarTecnico(nombre.trim(), esp);
+            vista.mostrarMensaje("Técnico registrado: " + t);
+            vista.actualizarAreaTexto(listarTecnicos());
+        } catch (IllegalArgumentException e) {
+            vista.mostrarMensaje("Especialidad inválida: " + especialidad);
+        }
     }
 
     /** Consulta todos los técnicos. */
@@ -58,6 +72,22 @@ public class ControlVista {
             vista.mostrarMensaje(ok ? "Estado actualizado." : "Técnico no encontrado.");
             if (ok) vista.actualizarAreaTexto(listarTecnicos());
         } catch (IllegalArgumentException e) { vista.mostrarMensaje("Estado inválido: " + estado); }
+    }
+
+    /** Elimina un técnico por id (solo si está DISPONIBLE). */
+    public void accionEliminarTecnico(String id) {
+        Tecnico t = cp.buscarTecnico(id);
+        if (t == null) {
+            vista.mostrarMensaje("Técnico no encontrado.");
+            return;
+        }
+        if (t.getEstado() == EstadoTecnico.OCUPADO) {
+            vista.mostrarMensaje("No se puede eliminar: el técnico está OCUPADO.");
+            return;
+        }
+        boolean ok = cp.eliminarTecnico(id);
+        vista.mostrarMensaje(ok ? "Técnico eliminado." : "No se pudo eliminar el técnico.");
+        if (ok) vista.actualizarAreaTexto(listarTecnicos());
     }
 
     // ---- UNIDADES ----
@@ -84,14 +114,33 @@ public class ControlVista {
         } catch (IllegalArgumentException e) { vista.mostrarMensaje("Estado inválido: " + estado); }
     }
 
+    /** Elimina una unidad por id (no se permite si está OCUPADA). */
+    public void accionEliminarUnidad(String id) {
+        UnidadServicio u = cp.buscarUnidad(id);
+        if (u == null) {
+            vista.mostrarMensaje("Unidad no encontrada.");
+            return;
+        }
+        if (u.getEstado() == EstadoUnidad.OCUPADO) {
+            vista.mostrarMensaje("No se puede eliminar: la unidad está OCUPADA.");
+            return;
+        }
+        boolean ok = cp.eliminarUnidad(id);
+        vista.mostrarMensaje(ok ? "Unidad eliminada." : "No se pudo eliminar la unidad.");
+        if (ok) vista.actualizarAreaTexto(listarUnidades());
+    }
+
     // ---- CLIENTES ----
 
     /** Registra cliente. */
-    public void accionRegistrarCliente(String nombre, String telefono) {
+    public void accionRegistrarCliente(String nombre, String telefono, String tipo) {
         if (nombre == null || nombre.isBlank()) { vista.mostrarMensaje("Error: El nombre es obligatorio."); return; }
-        Cliente c = cp.registrarCliente(nombre.trim(), telefono == null ? "" : telefono.trim());
-        vista.mostrarMensaje("Cliente registrado: " + c);
-        vista.actualizarAreaTexto(listarClientes());
+        try {
+            Cliente.TipoCliente tc = Cliente.TipoCliente.valueOf(tipo.toUpperCase());
+            Cliente c = cp.registrarCliente(nombre.trim(), telefono == null ? "" : telefono.trim(), tc);
+            vista.mostrarMensaje("Cliente registrado: " + c);
+            vista.actualizarAreaTexto(listarClientes());
+        } catch (IllegalArgumentException e) { vista.mostrarMensaje("Tipo de cliente inválido."); }
     }
 
     /** Busca cliente por id. */
@@ -100,48 +149,72 @@ public class ControlVista {
         vista.actualizarAreaTexto(c == null ? "Cliente no encontrado: " + id : "Cliente encontrado:\n  " + c);
     }
 
+    /** Consulta todos los clientes. */
+    public void accionConsultarClientes() { vista.actualizarAreaTexto(listarClientes()); }
+
+    /** Elimina un cliente por id (solo si no tiene solicitudes registradas). */
+    public void accionEliminarCliente(String id) {
+        Cliente c = cp.buscarCliente(id);
+        if (c == null) {
+            vista.mostrarMensaje("Cliente no encontrado.");
+            return;
+        }
+        boolean ok = cp.eliminarCliente(id);
+        if (!ok) {
+            vista.mostrarMensaje("No se puede eliminar: el cliente tiene solicitudes registradas.");
+            return;
+        }
+        vista.mostrarMensaje("Cliente eliminado.");
+        vista.actualizarAreaTexto(listarClientes());
+    }
+
     // ---- SOLICITUDES ----
 
-    /** Registra solicitud. */
-    public void accionRegistrarSolicitud(String clienteId, String descripcion, String prioridad) {
-        if (descripcion == null || descripcion.isBlank()) { vista.mostrarMensaje("Error: La descripción es obligatoria."); return; }
+    /** Registra solicitud. La prioridad se calcula automáticamente. */
+    public void accionRegistrarSolicitud(String clienteId, String tipoServicio, String zona) {
+        if (tipoServicio == null || tipoServicio.isBlank()) { vista.mostrarMensaje("Error: El tipo de servicio es obligatorio."); return; }
         try {
-            SolicitudServicio sol = cp.registrarSolicitud(clienteId, descripcion.trim(), Prioridad.valueOf(prioridad.toUpperCase()));
+            Tecnico.TipoServicio ts = Tecnico.TipoServicio.valueOf(tipoServicio.toUpperCase());
+            SolicitudServicio.Zona z = SolicitudServicio.Zona.valueOf(zona.toUpperCase());
+            SolicitudServicio sol = cp.registrarSolicitud(clienteId, ts, z);
             if (sol == null) vista.mostrarMensaje("Error: Cliente no encontrado: " + clienteId);
-            else { vista.mostrarMensaje("Solicitud registrada: " + sol); vista.actualizarAreaTexto(listarSolicitudes()); }
-        } catch (IllegalArgumentException e) { vista.mostrarMensaje("Prioridad inválida: " + prioridad); }
+            else {
+                if (cp.pilaKitsDisponiblesVacia()) {
+                    vista.mostrarMensaje("Solicitud registrada: " + sol
+                            + "\nNo hay kits disponibles. La solicitud queda en cola y se atenderá automáticamente cuando haya kits.");
+                } else {
+                    vista.mostrarMensaje("Solicitud registrada: " + sol);
+                }
+                vista.actualizarAreaTexto(listarSolicitudes());
+            }
+        } catch (IllegalArgumentException e) { vista.mostrarMensaje("Tipo de servicio o zona inválidos."); }
     }
 
     /** Consulta solicitudes organizadas por estado. */
     public void accionConsultarSolicitudes() { vista.actualizarAreaTexto(listarSolicitudes()); }
 
-    /**
-     * Muestra la siguiente solicitud en cola y retorna sus datos para que la vista
-     * pueda pedir los recursos al usuario.
-     * @return La solicitud, o null si no hay pendientes.
-     */
-    public SolicitudServicio accionVerSiguienteSolicitud() {
-        SolicitudServicio sol = cp.verSiguienteSolicitud();
-        if (sol == null) vista.mostrarMensaje("No hay solicitudes pendientes en cola.");
-        return sol;
+    /** Elimina una solicitud por id (solo si está PENDIENTE). */
+    public void accionEliminarSolicitud(String id) {
+        SolicitudServicio s = cp.buscarSolicitud(id);
+        if (s == null) {
+            vista.mostrarMensaje("Solicitud no encontrada.");
+            return;
+        }
+        if (s.getEstado() != SolicitudServicio.EstadoSolicitud.PENDIENTE) {
+            vista.mostrarMensaje("Solo se pueden eliminar solicitudes en estado PENDIENTE.");
+            return;
+        }
+        boolean ok = cp.eliminarSolicitud(id);
+        vista.mostrarMensaje(ok ? "Solicitud eliminada." : "No se pudo eliminar la solicitud.");
+        if (ok) vista.actualizarAreaTexto(listarSolicitudes());
     }
 
     /**
-     * Asigna recursos a la siguiente solicitud y la desencola.
-     * @param tecnicoId Id del técnico.
-     * @param unidadId  Id de la unidad.
-     * @param usarKit   true si se asigna kit.
+     * Recibe notificaciones del modelo (timers) y actualiza la vista.
+     * @param mensaje Mensaje informativo del evento.
      */
-    public void accionAsignarRecursosASiguiente(String tecnicoId, String unidadId, boolean usarKit) {
-        String r = cp.asignarRecursosASiguiente(tecnicoId, unidadId, usarKit);
-        vista.mostrarMensaje(r);
-        vista.actualizarAreaTexto(listarSolicitudes());
-    }
-
-    /** Completa un servicio. */
-    public void accionCompletarServicio(String solicitudId) {
-        String r = cp.completarServicio(solicitudId);
-        vista.mostrarMensaje(r);
+    public void notificarActualizacion(String mensaje) {
+        vista.mostrarMensaje(mensaje);
         vista.actualizarAreaTexto(listarSolicitudes());
     }
 
@@ -220,10 +293,35 @@ public class ControlVista {
         sb.append("╔══════════════════════════════════════╗\n");
         sb.append("║         SOLICITUDES PENDIENTES       ║\n");
         sb.append("╚══════════════════════════════════════╝\n");
-        ListaEnlazadaSimple.Iterador<SolicitudServicio> it = cp.getTodasLasSolicitudes().iterador();
         boolean hay = false;
+        ListaEnlazadaSimple.Iterador<SolicitudServicio> it = cp.getTodasLasSolicitudes().iterador();
         while (it.tieneSiguiente()) { SolicitudServicio s = it.siguiente();
-            if (s.getEstado() == SolicitudServicio.EstadoSolicitud.PENDIENTE) { sb.append("  ").append(s).append("\n"); hay = true; } }
+            if (s.getEstado() == SolicitudServicio.EstadoSolicitud.PENDIENTE
+                    && s.getPrioridad() == SolicitudServicio.Prioridad.CRITICA) {
+                Tecnico.Especialidad esp = s.getTipoServicio().getEspecialidadRequerida();
+                sb.append("  [").append(s.getId()).append("] ")
+                        .append(s.getCliente().getNombre()).append(" | ")
+                        .append(s.getTipoServicio().getNombre()).append(" | ")
+                        .append(s.getPrioridad()).append(" | ")
+                        .append(esp.getDuracionMinMin()).append("-")
+                        .append(esp.getDuracionMaxMin()).append(" min\n");
+                hay = true;
+            }
+        }
+        it = cp.getTodasLasSolicitudes().iterador();
+        while (it.tieneSiguiente()) { SolicitudServicio s = it.siguiente();
+            if (s.getEstado() == SolicitudServicio.EstadoSolicitud.PENDIENTE
+                    && s.getPrioridad() == SolicitudServicio.Prioridad.ORDINARIA) {
+                Tecnico.Especialidad esp = s.getTipoServicio().getEspecialidadRequerida();
+                sb.append("  [").append(s.getId()).append("] ")
+                        .append(s.getCliente().getNombre()).append(" | ")
+                        .append(s.getTipoServicio().getNombre()).append(" | ")
+                        .append(s.getPrioridad()).append(" | ")
+                        .append(esp.getDuracionMinMin()).append("-")
+                        .append(esp.getDuracionMaxMin()).append(" min\n");
+                hay = true;
+            }
+        }
         if (!hay) sb.append("  (ninguna)\n");
 
         sb.append("\n╔══════════════════════════════════════╗\n");
@@ -231,12 +329,37 @@ public class ControlVista {
         sb.append("╚══════════════════════════════════════╝\n");
         it = cp.getTodasLasSolicitudes().iterador(); hay = false;
         while (it.tieneSiguiente()) { SolicitudServicio s = it.siguiente();
-            if (s.getEstado() == SolicitudServicio.EstadoSolicitud.EN_PROCESO) {
-                sb.append("  ").append(s);
-                if (s.getTecnicoAsignado() != null) sb.append(" | Técnico: ").append(s.getTecnicoAsignado().getNombre());
-                if (s.getUnidadAsignada() != null) sb.append(" | Unidad: [").append(s.getUnidadAsignada().getId()).append("]");
-                if (s.getKitAsignado() != null) sb.append(" | ").append(s.getKitAsignado());
+            if (s.getEstado() == SolicitudServicio.EstadoSolicitud.EN_PROCESO
+                    && s.getPrioridad() == SolicitudServicio.Prioridad.CRITICA) {
+                sb.append("  [").append(s.getId()).append("] ")
+                  .append(s.getCliente().getNombre()).append(" | ")
+                  .append(s.getTipoServicio().getNombre());
+                if (s.getTecnicoAsignado() != null)
+                    sb.append(" | Técnico: ").append(s.getTecnicoAsignado().getNombre())
+                      .append(" (~").append(s.getDuracionMs() / 1000L * 10L).append(" min)");
+                if (s.getUnidadAsignada() != null)
+                    sb.append(" | Unidad: [").append(s.getUnidadAsignada().getId()).append("]");
+                if (s.getKitAsignado() != null)
+                    sb.append(" | ").append(s.getKitAsignado());
                 sb.append("\n"); hay = true; } }
+        it = cp.getTodasLasSolicitudes().iterador();
+        while (it.tieneSiguiente()) { SolicitudServicio s = it.siguiente();
+            if (s.getEstado() == SolicitudServicio.EstadoSolicitud.EN_PROCESO
+                    && s.getPrioridad() == SolicitudServicio.Prioridad.ORDINARIA) {
+                sb.append("  [").append(s.getId()).append("] ")
+                        .append(s.getCliente().getNombre()).append(" | ")
+                        .append(s.getTipoServicio().getNombre());
+                if (s.getTecnicoAsignado() != null)
+                    sb.append(" | Técnico: ").append(s.getTecnicoAsignado().getNombre())
+                            .append(" (~").append(s.getDuracionMs() / 1000L * 10L).append(" min)");
+                if (s.getUnidadAsignada() != null)
+                    sb.append(" | Unidad: [").append(s.getUnidadAsignada().getId()).append("]");
+                if (s.getKitAsignado() != null)
+                    sb.append(" | ").append(s.getKitAsignado());
+                sb.append("\n");
+                hay = true;
+            }
+        }
         if (!hay) sb.append("  (ninguna)\n");
 
         sb.append("\n╔══════════════════════════════════════╗\n");
@@ -244,7 +367,24 @@ public class ControlVista {
         sb.append("╚══════════════════════════════════════╝\n");
         it = cp.getTodasLasSolicitudes().iterador(); hay = false;
         while (it.tieneSiguiente()) { SolicitudServicio s = it.siguiente();
-            if (s.getEstado() == SolicitudServicio.EstadoSolicitud.COMPLETADA) { sb.append("  ").append(s).append("\n"); hay = true; } }
+            if (s.getEstado() == SolicitudServicio.EstadoSolicitud.COMPLETADA
+                    && s.getPrioridad() == SolicitudServicio.Prioridad.CRITICA) {
+                sb.append("  [").append(s.getId()).append("] ")
+                        .append(s.getCliente().getNombre()).append(" | ")
+                        .append(s.getTipoServicio().getNombre()).append("\n");
+                hay = true;
+            }
+        }
+        it = cp.getTodasLasSolicitudes().iterador();
+        while (it.tieneSiguiente()) { SolicitudServicio s = it.siguiente();
+            if (s.getEstado() == SolicitudServicio.EstadoSolicitud.COMPLETADA
+                    && s.getPrioridad() == SolicitudServicio.Prioridad.ORDINARIA) {
+                sb.append("  [").append(s.getId()).append("] ")
+                        .append(s.getCliente().getNombre()).append(" | ")
+                        .append(s.getTipoServicio().getNombre()).append("\n");
+                hay = true;
+            }
+        }
         if (!hay) sb.append("  (ninguna)\n");
         return sb.toString();
     }

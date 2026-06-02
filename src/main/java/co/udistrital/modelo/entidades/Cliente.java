@@ -2,7 +2,8 @@ package co.udistrital.modelo.entidades;
 
 /**
  * Representa un cliente de la empresa AutoRescate 24/7.
- * Toda solicitud de servicio debe quedar asociada a un cliente registrado.
+ * El tipo de cliente (ORDINARIO o PRIORITARIO) aporta puntos al cálculo
+ * automático de prioridad de sus solicitudes.
  *
  * @author AutoRescate 24/7
  */
@@ -17,17 +18,48 @@ public class Cliente {
     /** Número de teléfono de contacto del cliente. */
     private String telefono;
 
+    /** Tipo de cliente que determina su peso en el cálculo de prioridad. */
+    private TipoCliente tipo;
+
+    /**
+     * Clasificación del cliente según su importancia operativa.
+     * Aporta puntos al sistema de prioridad automática de solicitudes.
+     */
+    public enum TipoCliente {
+        /** Cliente regular, aporta 0 puntos de prioridad. */
+        ORDINARIO(0, "Ordinario"),
+        /** Cliente con contrato especial o alta criticidad, aporta 2 puntos. */
+        PRIORITARIO(2, "Prioritario");
+
+        /** Puntos que este tipo de cliente aporta al cálculo de prioridad. */
+        private final int puntos;
+        private final String nombre;
+
+        TipoCliente(int puntos, String nombre) {
+            this.puntos = puntos;
+            this.nombre = nombre;
+        }
+
+        /** @return Puntos de prioridad que aporta este tipo de cliente. */
+        public int getPuntos() { return puntos; }
+
+        @Override
+        public String toString() { return nombre; }
+    }
+
     /**
      * Construye un nuevo cliente.
      *
-     * @param id       Identificador único del cliente.
-     * @param nombre   Nombre completo del cliente.
-     * @param telefono Teléfono de contacto del cliente.
+     * @param id       Identificador único.
+     * @param nombre   Nombre completo.
+     * @param telefono Teléfono de contacto.
+     * @param tipo     Tipo de cliente (ORDINARIO o PRIORITARIO).
      */
-    public Cliente(String id, String nombre, String telefono) {
+    public Cliente(String id, String nombre, String telefono, TipoCliente tipo) {
         this.id = id;
         this.nombre = nombre;
         this.telefono = telefono;
+        this.tipo = tipo;
     }
 
     /** @return El id del cliente. */
@@ -36,17 +68,11 @@ public class Cliente {
     /** @return El nombre del cliente. */
     public String getNombre() { return nombre; }
 
-    /** @param nombre Nuevo nombre. */
-    public void setNombre(String nombre) { this.nombre = nombre; }
-
-    /** @return El teléfono del cliente. */
-    public String getTelefono() { return telefono; }
-
-    /** @param telefono Nuevo teléfono. */
-    public void setTelefono(String telefono) { this.telefono = telefono; }
+    /** @return El tipo de cliente. */
+    public TipoCliente getTipo() { return tipo; }
 
     @Override
     public String toString() {
-        return "[" + id + "] " + nombre + " | Tel: " + telefono;
+        return "[" + id + "] " + nombre + " | Tel: " + telefono + " | " + tipo;
     }
 }

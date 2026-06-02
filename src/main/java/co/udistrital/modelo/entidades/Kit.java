@@ -1,77 +1,89 @@
 package co.udistrital.modelo.entidades;
 
+import java.util.Random;
+
 /**
  * Representa un kit de atención rápida de la empresa AutoRescate 24/7.
- * Los kits disponibles se gestionan en una pila LIFO. Cuando se usa en un servicio
- * pasa a EN_USO, al terminar el servicio pasa a una pila de revisión (EN_REVISION),
- * y tras la revisión vuelve a LISTO o se repone con un kit nuevo.
+ * Al regresar de un servicio se le asigna automáticamente una decisión de revisión
+ * (REPARAR, REPONER o NADA), que el operario aplicará al procesarlo.
  *
  * @author AutoRescate 24/7
  */
 public class Kit {
 
-    /** Identificador único del kit (número simple: 1, 2, 3...). */
+    private static final Random RANDOM = new Random();
+
+    /** Identificador único del kit (1, 2, 3...). */
     private String id;
 
     /** Estado actual del kit. */
     private EstadoKit estado;
 
     /**
-     * Enumeración de los posibles estados de un kit.
+     * Decisión de revisión asignada al regresar del servicio.
+     * Determina qué hará el operario automáticamente.
      */
+    private DecisionRevision decision;
+
+    /** Estados posibles del kit. */
     public enum EstadoKit {
-        /** El kit está disponible en la pila para ser despachado. */
+        /** Disponible en la pila para ser despachado. */
         LISTO,
-        /** El kit está siendo utilizado en un servicio activo. */
+        /** Siendo utilizado en un servicio activo. */
         EN_USO,
-        /** El kit regresó de un servicio y está pendiente de revisión. */
+        /** Regresó de un servicio, pendiente de revisión por el operario. */
         EN_REVISION
     }
 
+    /** Decisiones de revisión posibles al inspeccionar el kit. */
+    public enum DecisionRevision {
+        /** El kit está bien, vuelve a LISTO sin cambios. */
+        NADA,
+        /** El kit necesita reparación, vuelve a LISTO tras arreglo. */
+        REPARAR,
+        /** El kit debe reponerse por uno nuevo. */
+        REPONER
+    }
+
     /**
-     * Construye un nuevo kit con estado inicial LISTO.
-     *
+     * Construye un nuevo kit con estado inicial LISTO y sin decisión asignada.
      * @param id Identificador único del kit.
      */
     public Kit(String id) {
         this.id = id;
         this.estado = EstadoKit.LISTO;
+        this.decision = null;
     }
 
-    /**
-     * Obtiene el identificador del kit.
-     *
-     * @return El id del kit.
-     */
-    public String getId() {
-        return id;
-    }
+    /** @return El id del kit. */
+    public String getId() { return id; }
+
+    /** @return El estado del kit. */
+    public EstadoKit getEstado() { return estado; }
+
+    /** @param estado El nuevo estado del kit. */
+    public void setEstado(EstadoKit estado) { this.estado = estado; }
+
+    /** @return La decisión de revisión asignada, o null si no ha sido revisado. */
+    public DecisionRevision getDecision() { return decision; }
+
+    /** @param decision La decisión de revisión a asignar. */
+    public void setDecision(DecisionRevision decision) { this.decision = decision; }
 
     /**
-     * Obtiene el estado del kit.
-     *
-     * @return El estado del kit.
+     * Asigna aleatoriamente una decisión de revisión al kit cuando regresa de un servicio.
+     * Probabilidades: 50% NADA, 30% REPARAR, 20% REPONER.
      */
-    public EstadoKit getEstado() {
-        return estado;
+    public void asignarDecisionAleatoria() {
+        int r = RANDOM.nextInt(10);
+        if (r < 5) this.decision = DecisionRevision.NADA;
+        else if (r < 8) this.decision = DecisionRevision.REPARAR;
+        else this.decision = DecisionRevision.REPONER;
     }
 
-    /**
-     * Establece el estado del kit.
-     *
-     * @param estado El nuevo estado del kit.
-     */
-    public void setEstado(EstadoKit estado) {
-        this.estado = estado;
-    }
-
-    /**
-     * Devuelve una representación textual del kit.
-     *
-     * @return Cadena con los datos del kit.
-     */
     @Override
     public String toString() {
-        return "Kit-" + id + " | " + estado;
+        String dec = decision != null ? " [" + decision + "]" : "";
+        return "Kit-" + id + " | " + estado + dec;
     }
 }

@@ -1,27 +1,16 @@
-# ============================================================
-# AUTORESCATE 24/7 - Datos de Prueba
-# Formato:
-#   CLIENTE,nombre,telefono
-#   TECNICO,nombre,especialidad
-#   UNIDAD,tipo,zona   (tipos: GRUA | MOTO | CAMIONETA | VEHICULO_LIVIANO)
-#   KIT                (sin parámetros, se numera automáticamente)
-#   SOLICITUD,clienteId,descripcion,prioridad  (ORDINARIA | CRITICA)
-# Las líneas con # son comentarios.
-# ============================================================
-
 # --- CLIENTES ---
-CLIENTE,Carlos Mendoza,3101234567
-CLIENTE,Laura Jiménez,3209876543
-CLIENTE,Transportes Rápido S.A.,6017654321
-CLIENTE,Ana Torres,3154567890
-CLIENTE,Ambulancias Vida,3001112233
+CLIENTE,Carlos Mendoza,3101234567,ORDINARIO
+CLIENTE,Laura Jiménez,3209876543,ORDINARIO
+CLIENTE,Transportes Rápido S.A.,6017654321,PRIORITARIO
+CLIENTE,Ana Torres,3154567890,ORDINARIO
+CLIENTE,Ambulancias Vida,3001112233,PRIORITARIO
 
 # --- TÉCNICOS ---
-TECNICO,Pedro Ramírez,Mecánica General
-TECNICO,Sofía Castillo,Electricidad Automotriz
-TECNICO,Andrés Moreno,Grúas y Remolque
-TECNICO,Valentina Cruz,Mecánica Diésel
-TECNICO,Luis Herrera,Asistencia en Carretera
+TECNICO,Pedro Ramírez,MECANICA_GENERAL
+TECNICO,Sofía Castillo,ELECTRICIDAD_AUTOMOTRIZ
+TECNICO,Andrés Moreno,GRUAS_Y_REMOLQUE
+TECNICO,Valentina Cruz,MECANICA_DIESEL
+TECNICO,Luis Herrera,ASISTENCIA_EN_CARRETERA
 
 # --- UNIDADES ---
 UNIDAD,GRUA,Norte
@@ -31,20 +20,10 @@ UNIDAD,MOTO,Occidente
 UNIDAD,CAMIONETA,Norte
 UNIDAD,CAMIONETA,Sur
 UNIDAD,VEHICULO_LIVIANO,Centro
-UNIDAD,VEHICULO_LIVIANO,Oriente
 
-# --- KITS (se agregan a la pila, el último es el primero en usarse) ---
+# --- KITS ---
 KIT
 KIT
 KIT
 KIT
 KIT
-
-# --- SOLICITUDES (los IDs de cliente son 1,2,3,4,5 en orden de registro) ---
-SOLICITUD,1,Batería descargada en parqueadero,ORDINARIA
-SOLICITUD,2,Cambio de llanta en vía principal,ORDINARIA
-SOLICITUD,3,Bus intermunicipal averiado con pasajeros,CRITICA
-SOLICITUD,4,Apertura de puerta bloqueada,ORDINARIA
-SOLICITUD,5,Ambulancia detenida por falla mecánica,CRITICA
-SOLICITUD,1,Suministro de combustible en carretera,ORDINARIA
-SOLICITUD,3,Vehículo bloqueando vía en hora pico,CRITICA

@@ -57,9 +57,13 @@ public class Movimiento {
      * Enumeración de los tipos de operaciones registrables.
      */
     public enum TipoOperacion {
+        /** Asignación de recursos para atender un servicio. */
         ATENDER_SERVICIO,
+        /** Finalización de un servicio en proceso. */
         COMPLETAR_SERVICIO,
+        /** Cambio manual del estado de una unidad. */
         CAMBIAR_ESTADO_UNIDAD,
+        /** Cambio manual del estado de un técnico. */
         CAMBIAR_ESTADO_TECNICO
     }
 

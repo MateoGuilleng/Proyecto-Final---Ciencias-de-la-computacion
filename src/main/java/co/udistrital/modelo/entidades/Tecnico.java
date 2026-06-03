@@ -29,9 +29,6 @@ public class Tecnico {
      */
     private EstadoTecnico estado;
 
-    // =========================================================================
-    // ENUMS
-    // =========================================================================
     /**
      * Especialidades disponibles para los técnicos. Cada especialidad define
      * los tipos de servicio que puede atender y el rango de duración estimada
@@ -101,16 +98,31 @@ public class Tecnico {
      * a una especialidad requerida y aporta puntos de prioridad.
      */
     public enum TipoServicio {
+        /** Paso de corriente al vehículo. */
         PASO_CORRIENTE("Paso de corriente", Especialidad.ELECTRICIDAD_AUTOMOTRIZ, 0),
+        /** Cambio de llanta en sitio. */
         CAMBIO_LLANTA("Cambio de llanta", Especialidad.MECANICA_GENERAL, 1),
+        /** Envío de grúa para remolque. */
         ENVIO_GRUA("Envío de grúa", Especialidad.GRUAS_Y_REMOLQUE, 1),
+        /** Apertura de puertas bloqueadas. */
         APERTURA_PUERTAS("Apertura de puertas", Especialidad.MECANICA_GENERAL, 0),
+        /** Suministro de combustible en carretera. */
         SUMINISTRO_COMBUSTIBLE("Suministro combustible", Especialidad.ASISTENCIA_EN_CARRETERA, 0),
+        /** Revisión mecánica básica del vehículo. */
         REVISION_MECANICA("Revisión mecánica básica", Especialidad.MECANICA_GENERAL, 0),
+        /** Atención por falla en motor diésel. */
         FALLA_DIESEL("Falla motor diésel", Especialidad.MECANICA_DIESEL, 2),
+        /** Asistencia por vehículo varado. */
         VEHICULO_VARADO("Vehículo varado", Especialidad.ASISTENCIA_EN_CARRETERA, 2);
 
+        /**
+         * Nombre descriptivo del servicio.
+         */
         private final String nombre;
+
+        /**
+         * Especialidad requerida para atender este servicio.
+         */
         private final Especialidad especialidadRequerida;
         /**
          * Puntos que este tipo de servicio aporta al cálculo de prioridad.
@@ -150,9 +162,6 @@ public class Tecnico {
         }
     }
 
-    // =========================================================================
-    // CONSTRUCTOR Y MÉTODOS
-    // =========================================================================
     /**
      * Construye un nuevo técnico con estado inicial DISPONIBLE.
      *

@@ -16,8 +16,19 @@ import java.awt.*;
  */
 public class VistaPrincipal extends JFrame {
 
+    /**
+     * Controlador de vista que procesa las acciones del usuario.
+     */
     private ControlVista cv;
+
+    /**
+     * Área de texto principal donde se muestra la información del sistema.
+     */
     private JTextArea areaTexto;
+
+    /**
+     * Barra de menú de la ventana principal.
+     */
     private JMenuBar menuBar;
 
     /**
@@ -57,16 +68,15 @@ public class VistaPrincipal extends JFrame {
         areaTexto.setCaretPosition(0);
     }
 
-    // =========================================================================
-    // INICIALIZACIÓN
-    // =========================================================================
+    /**
+     * Configura los componentes gráficos de la ventana principal.
+     */
     private void inicializarComponentes() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(960, 680);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // Panel norte: título + botón de prueba
         JPanel panelNorte = new JPanel(new BorderLayout());
         panelNorte.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
         JLabel titulo = new JLabel("AutoRescate 24/7 - Centro de Operaciones", SwingConstants.CENTER);
@@ -80,7 +90,6 @@ public class VistaPrincipal extends JFrame {
         panelNorte.add(btnPrueba, BorderLayout.EAST);
         add(panelNorte, BorderLayout.NORTH);
 
-        // Área de texto central
         areaTexto = new JTextArea();
         areaTexto.setEditable(false);
         areaTexto.setFont(new Font("Monospaced", Font.PLAIN, 13));
@@ -89,7 +98,6 @@ public class VistaPrincipal extends JFrame {
         scroll.setBorder(BorderFactory.createTitledBorder("Información del Sistema"));
         add(scroll, BorderLayout.CENTER);
 
-        // Barra de menú
         menuBar = new JMenuBar();
         construirMenuTecnicos();
         construirMenuUnidades();
@@ -105,9 +113,9 @@ public class VistaPrincipal extends JFrame {
         add(status, BorderLayout.SOUTH);
     }
 
-    // =========================================================================
-    // MENÚS
-    // =========================================================================
+    /**
+     * Construye el menú de gestión de técnicos.
+     */
     private void construirMenuTecnicos() {
         JMenu m = new JMenu("Técnicos");
         addItem(m, "Registrar", () -> dialogoRegistrarTecnico());
@@ -118,6 +126,9 @@ public class VistaPrincipal extends JFrame {
         menuBar.add(m);
     }
 
+    /**
+     * Construye el menú de gestión de unidades.
+     */
     private void construirMenuUnidades() {
         JMenu m = new JMenu("Unidades");
         addItem(m, "Registrar", () -> dialogoRegistrarUnidad());
@@ -127,6 +138,9 @@ public class VistaPrincipal extends JFrame {
         menuBar.add(m);
     }
 
+    /**
+     * Construye el menú de gestión de clientes.
+     */
     private void construirMenuClientes() {
         JMenu m = new JMenu("Clientes");
         addItem(m, "Registrar", () -> dialogoRegistrarCliente());
@@ -136,6 +150,9 @@ public class VistaPrincipal extends JFrame {
         menuBar.add(m);
     }
 
+    /**
+     * Construye el menú de gestión de solicitudes.
+     */
     private void construirMenuSolicitudes() {
         JMenu m = new JMenu("Solicitudes");
         addItem(m, "Registrar", () -> dialogoRegistrarSolicitud());
@@ -146,6 +163,9 @@ public class VistaPrincipal extends JFrame {
         menuBar.add(m);
     }
 
+    /**
+     * Construye el menú de gestión de kits.
+     */
     private void construirMenuKits() {
         JMenu m = new JMenu("Kits");
         addItem(m, "Agregar kit", () -> cv.accionAgregarKit());
@@ -154,12 +174,18 @@ public class VistaPrincipal extends JFrame {
         menuBar.add(m);
     }
 
+    /**
+     * Construye el menú de operaciones del sistema.
+     */
     private void construirMenuOperaciones() {
         JMenu m = new JMenu("Operaciones");
         addItem(m, "Deshacer última operación", () -> cv.accionDeshacerUltimaOperacion());
         menuBar.add(m);
     }
 
+    /**
+     * Construye el menú de reportes y exportación.
+     */
     private void construirMenuReportes() {
         JMenu m = new JMenu("Reportes");
         addItem(m, "Ver reporte general", () -> cv.accionVerReporte());
@@ -176,9 +202,9 @@ public class VistaPrincipal extends JFrame {
         menu.add(item);
     }
 
-    // =========================================================================
-    // DIÁLOGOS - TÉCNICOS
-    // =========================================================================
+    /**
+     * Muestra el diálogo para registrar un nuevo técnico.
+     */
     private void dialogoRegistrarTecnico() {
         JTextField fNombre = new JTextField();
         JComboBox<String> comboEsp = new JComboBox<>(cv.obtenerNombresEspecialidad());
@@ -189,6 +215,9 @@ public class VistaPrincipal extends JFrame {
         }
     }
 
+    /**
+     * Muestra el diálogo para buscar un técnico por identificador.
+     */
     private void dialogoBuscarTecnico() {
         String id = JOptionPane.showInputDialog(this, "ID del técnico:", "Buscar Técnico", JOptionPane.QUESTION_MESSAGE);
         if (id != null && !id.isBlank()) {
@@ -196,6 +225,9 @@ public class VistaPrincipal extends JFrame {
         }
     }
 
+    /**
+     * Muestra el diálogo para cambiar el estado de un técnico.
+     */
     private void dialogoCambiarEstadoTecnico() {
         JTextField fId = new JTextField();
         JComboBox<String> combo = new JComboBox<>(new String[]{"DISPONIBLE", "OCUPADO"});
@@ -205,6 +237,9 @@ public class VistaPrincipal extends JFrame {
         }
     }
 
+    /**
+     * Muestra el diálogo para eliminar un técnico.
+     */
     private void dialogoEliminarTecnico() {
         String id = JOptionPane.showInputDialog(this, "ID del técnico a eliminar:", "Eliminar Técnico", JOptionPane.QUESTION_MESSAGE);
         if (id != null && !id.isBlank()) {
@@ -212,9 +247,9 @@ public class VistaPrincipal extends JFrame {
         }
     }
 
-    // =========================================================================
-    // DIÁLOGOS - UNIDADES
-    // =========================================================================
+    /**
+     * Muestra el diálogo para registrar una nueva unidad.
+     */
     private void dialogoRegistrarUnidad() {
         JComboBox<String> comboTipo = new JComboBox<>(new String[]{"GRUA", "MOTO", "CAMIONETA", "VEHICULO_LIVIANO"});
         JTextField fZona = new JTextField();
@@ -224,6 +259,9 @@ public class VistaPrincipal extends JFrame {
         }
     }
 
+    /**
+     * Muestra el diálogo para cambiar el estado de una unidad.
+     */
     private void dialogoCambiarEstadoUnidad() {
         JTextField fId = new JTextField();
         JComboBox<String> combo = new JComboBox<>(new String[]{"DISPONIBLE", "OCUPADO", "MANTENIMIENTO"});
@@ -233,6 +271,9 @@ public class VistaPrincipal extends JFrame {
         }
     }
 
+    /**
+     * Muestra el diálogo para eliminar una unidad.
+     */
     private void dialogoEliminarUnidad() {
         String id = JOptionPane.showInputDialog(this, "ID de la unidad a eliminar:", "Eliminar Unidad", JOptionPane.QUESTION_MESSAGE);
         if (id != null && !id.isBlank()) {
@@ -240,9 +281,9 @@ public class VistaPrincipal extends JFrame {
         }
     }
 
-    // =========================================================================
-    // DIÁLOGOS - CLIENTES
-    // =========================================================================
+    /**
+     * Muestra el diálogo para registrar un nuevo cliente.
+     */
     private void dialogoRegistrarCliente() {
         JTextField fNombre = new JTextField(), fTel = new JTextField();
         JComboBox<Cliente.TipoCliente> comboTipo = new JComboBox<>(Cliente.TipoCliente.values());
@@ -254,6 +295,9 @@ public class VistaPrincipal extends JFrame {
         }
     }
 
+    /**
+     * Muestra el diálogo para buscar un cliente por identificador.
+     */
     private void dialogoBuscarCliente() {
         String id = JOptionPane.showInputDialog(this, "ID del cliente:", "Buscar Cliente", JOptionPane.QUESTION_MESSAGE);
         if (id != null && !id.isBlank()) {
@@ -261,6 +305,9 @@ public class VistaPrincipal extends JFrame {
         }
     }
 
+    /**
+     * Muestra el diálogo para eliminar un cliente.
+     */
     private void dialogoEliminarCliente() {
         String id = JOptionPane.showInputDialog(this, "ID del cliente a eliminar:", "Eliminar Cliente", JOptionPane.QUESTION_MESSAGE);
         if (id != null && !id.isBlank()) {
@@ -268,9 +315,9 @@ public class VistaPrincipal extends JFrame {
         }
     }
 
-    // =========================================================================
-    // DIÁLOGOS - SOLICITUDES
-    // =========================================================================
+    /**
+     * Muestra el diálogo para registrar una nueva solicitud.
+     */
     private void dialogoRegistrarSolicitud() {
         JTextField fClienteId = new JTextField();
         JComboBox<Tecnico.TipoServicio> comboTipo = new JComboBox<>(Tecnico.TipoServicio.values());
@@ -293,6 +340,9 @@ public class VistaPrincipal extends JFrame {
         }
     }
 
+    /**
+     * Muestra el diálogo para completar un servicio en proceso.
+     */
     private void dialogoCompletarServicio() {
         String id = JOptionPane.showInputDialog(this,
                 "ID de la solicitud en proceso a completar:",
@@ -302,6 +352,9 @@ public class VistaPrincipal extends JFrame {
         }
     }
 
+    /**
+     * Muestra el diálogo para eliminar una solicitud pendiente.
+     */
     private void dialogoEliminarSolicitud() {
         String id = JOptionPane.showInputDialog(this, "ID de la solicitud a eliminar:", "Eliminar Solicitud", JOptionPane.QUESTION_MESSAGE);
         if (id != null && !id.isBlank()) {
@@ -320,9 +373,9 @@ public class VistaPrincipal extends JFrame {
         }
     }
 
-    // =========================================================================
-    // DIÁLOGO - IMPORTAR DATOS DE PRUEBA
-    // =========================================================================
+    /**
+     * Muestra el diálogo para importar datos de prueba desde un archivo CSV.
+     */
     private void dialogoImportarDatosPrueba() {
         JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
         fc.setDialogTitle("Seleccionar archivo de datos de prueba");

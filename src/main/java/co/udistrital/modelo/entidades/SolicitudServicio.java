@@ -55,9 +55,6 @@ public class SolicitudServicio {
      */
     private Kit kitAsignado;
 
-    // =========================================================================
-    // ENUMS
-    // =========================================================================
     /**
      * Zona donde ocurre el incidente. Aporta puntos al cálculo de prioridad.
      */
@@ -121,12 +118,14 @@ public class SolicitudServicio {
      * Estado de la solicitud.
      */
     public enum EstadoSolicitud {
-        PENDIENTE, EN_PROCESO, COMPLETADA
+        /** Esperando asignación de recursos. */
+        PENDIENTE,
+        /** Recursos asignados, servicio en curso. */
+        EN_PROCESO,
+        /** Servicio finalizado. */
+        COMPLETADA
     }
 
-    // =========================================================================
-    // CONSTRUCTOR
-    // =========================================================================
     /**
      * Construye una nueva solicitud con estado PENDIENTE. La prioridad se
      * calcula automáticamente con la fórmula: puntos = cliente.tipo.puntos +
@@ -149,16 +148,12 @@ public class SolicitudServicio {
         this.unidadAsignada = null;
         this.kitAsignado = null;
 
-        // Calcular prioridad automáticamente
         int puntos = cliente.getTipo().getPuntos()
                 + zona.getPuntos()
                 + tipoServicio.getPuntos();
         this.prioridad = (puntos >= 4) ? Prioridad.CRITICA : Prioridad.ORDINARIA;
     }
 
-    // =========================================================================
-    // GETTERS / SETTERS
-    // =========================================================================
     /**
      * @return El id.
      */

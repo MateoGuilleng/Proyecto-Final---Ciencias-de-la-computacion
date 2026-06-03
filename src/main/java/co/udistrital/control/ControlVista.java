@@ -21,7 +21,14 @@ import co.udistrital.vista.VistaPrincipal;
  */
 public class ControlVista {
 
+    /**
+     * Referencia al controlador principal de la lógica de negocio.
+     */
     private ControlPrincipal cp;
+
+    /**
+     * Referencia a la vista principal de la aplicación.
+     */
     private VistaPrincipal vista;
 
     /**
@@ -35,7 +42,6 @@ public class ControlVista {
         this.vista = vista;
     }
 
-    // ---- TÉCNICOS ----
     /**
      * Nombres de las especialidades para combos en la vista.
      */
@@ -114,7 +120,6 @@ public class ControlVista {
         }
     }
 
-    // ---- UNIDADES ----
     /**
      * Registra unidad.
      */
@@ -172,7 +177,6 @@ public class ControlVista {
         }
     }
 
-    // ---- CLIENTES ----
     /**
      * Registra cliente.
      */
@@ -224,7 +228,6 @@ public class ControlVista {
         }
     }
 
-    // ---- SOLICITUDES ----
     /**
      * Registra solicitud. La prioridad se calcula automáticamente.
      */
@@ -315,7 +318,6 @@ public class ControlVista {
         }
     }
 
-    // ---- KITS ----
     /**
      * Agrega un kit a la pila de disponibles.
      */
@@ -332,7 +334,6 @@ public class ControlVista {
         vista.actualizarAreaTexto(listarKits());
     }
 
-    // ---- OPERACIONES ----
     /**
      * Deshace la última operación.
      */
@@ -341,7 +342,6 @@ public class ControlVista {
         vista.mostrarMensaje(r);
     }
 
-    // ---- REPORTES ----
     /**
      * Muestra reporte general.
      */
@@ -365,7 +365,11 @@ public class ControlVista {
         vista.actualizarAreaTexto(cp.generarReporte());
     }
 
-    // ---- HELPERS ----
+    /**
+     * Genera texto con la lista de técnicos registrados.
+     *
+     * @return Representación textual de los técnicos.
+     */
     private String listarTecnicos() {
         StringBuilder sb = new StringBuilder("TÉCNICOS:\n");
         ListaEnlazadaSimple.Iterador<Tecnico> it = cp.getTecnicos().iterador();
@@ -379,6 +383,11 @@ public class ControlVista {
         return sb.toString();
     }
 
+    /**
+     * Genera texto con la lista de unidades registradas.
+     *
+     * @return Representación textual de las unidades.
+     */
     private String listarUnidades() {
         StringBuilder sb = new StringBuilder("UNIDADES DE SERVICIO:\n");
         ListaEnlazadaSimple.Iterador<UnidadServicio> it = cp.getUnidades().iterador();
@@ -392,6 +401,11 @@ public class ControlVista {
         return sb.toString();
     }
 
+    /**
+     * Genera texto con la lista de clientes registrados.
+     *
+     * @return Representación textual de los clientes.
+     */
     private String listarClientes() {
         StringBuilder sb = new StringBuilder("CLIENTES:\n");
         ListaEnlazadaSimple.Iterador<Cliente> it = cp.getClientes().iterador();
@@ -525,6 +539,11 @@ public class ControlVista {
         return sb.toString();
     }
 
+    /**
+     * Genera texto con el estado de las pilas de kits.
+     *
+     * @return Representación textual de los kits.
+     */
     private String listarKits() {
         StringBuilder sb = new StringBuilder();
         int disp = cp.getPilaKitsDisponibles().getTamanno();
@@ -584,6 +603,11 @@ public class ControlVista {
         return sb.toString();
     }
 
+    /**
+     * Cuenta los kits actualmente en uso en solicitudes activas.
+     *
+     * @return Cantidad de kits en estado {@link Kit.EstadoKit#EN_USO}.
+     */
     private int contarKitsEnUso() {
         int n = 0;
         ListaEnlazadaSimple.Iterador<SolicitudServicio> it = cp.getTodasLasSolicitudes().iterador();

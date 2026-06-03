@@ -1,19 +1,36 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package co.udistrital.modelo.estructuras;
 
+/**
+ * Implementación de una cola (FIFO) basada en nodos enlazados.
+ *
+ * @param <T> Tipo de los elementos almacenados.
+ * @author AutoRescate 24/7
+ */
 public class Cola<T> {
 
+    /**
+     * Nodo del frente de la cola (primer elemento en salir).
+     */
     private Nodo<T> frente;
+
+    /**
+     * Nodo del fondo de la cola (último elemento en entrar).
+     */
     private Nodo<T> fondo;
 
+    /**
+     * Construye una cola vacía.
+     */
     public Cola() {
         this.frente = null;
         this.fondo = null;
     }
 
+    /**
+     * Inserta un elemento al final de la cola.
+     *
+     * @param dato Elemento a encolar.
+     */
     public void encolar(T dato) {
         Nodo<T> nuevoNodo = new Nodo<>(dato);
         if (estaVacia()) {
@@ -25,6 +42,11 @@ public class Cola<T> {
         }
     }
 
+    /**
+     * Retira y devuelve el elemento del frente de la cola.
+     *
+     * @return El dato desencolado, o {@code null} si la cola está vacía.
+     */
     public T desencolar() {
         if (estaVacia()) {
             return null;
@@ -38,6 +60,9 @@ public class Cola<T> {
         }
     }
 
+    /**
+     * @return {@code true} si la cola no contiene elementos.
+     */
     public boolean estaVacia() {
         return this.frente == null;
     }

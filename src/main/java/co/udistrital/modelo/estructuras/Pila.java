@@ -1,25 +1,41 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package co.udistrital.modelo.estructuras;
 
-import co.udistrital.modelo.estructuras.Nodo;
-
+/**
+ * Implementación de una pila (LIFO) basada en nodos enlazados.
+ *
+ * @param <T> Tipo de los elementos almacenados.
+ * @author AutoRescate 24/7
+ */
 public class Pila<T> {
 
+    /**
+     * Nodo en la cima de la pila (último elemento insertado).
+     */
     private Nodo<T> tope;
 
+    /**
+     * Construye una pila vacía.
+     */
     public Pila() {
         this.tope = null;
     }
 
+    /**
+     * Inserta un elemento en la cima de la pila.
+     *
+     * @param dato Elemento a apilar.
+     */
     public void push(T dato) {
         Nodo<T> nuevoNodo = new Nodo<>(dato);
         nuevoNodo.setSiguiente(this.tope);
         this.tope = nuevoNodo;
     }
 
+    /**
+     * Retira y devuelve el elemento de la cima de la pila.
+     *
+     * @return El dato desapilado, o {@code null} si la pila está vacía.
+     */
     public T pop() {
         if (estaVacia()) {
             return null;
@@ -30,6 +46,11 @@ public class Pila<T> {
         }
     }
 
+    /**
+     * Devuelve el elemento de la cima sin retirarlo.
+     *
+     * @return El dato en la cima, o {@code null} si la pila está vacía.
+     */
     public T cima() {
         if (estaVacia()) {
             return null;
@@ -38,6 +59,9 @@ public class Pila<T> {
         }
     }
 
+    /**
+     * @return {@code true} si la pila no contiene elementos.
+     */
     public boolean estaVacia() {
         return this.tope == null;
     }
@@ -87,14 +111,16 @@ public class Pila<T> {
         }
 
         /**
-         * @return true si hay más elementos.
+         * @return {@code true} si hay más elementos.
          */
         public boolean tieneSiguiente() {
             return actual != null;
         }
 
         /**
-         * @return El dato del nodo actual y avanza.
+         * Devuelve el dato del nodo actual y avanza al siguiente.
+         *
+         * @return El dato del nodo actual.
          */
         public I siguiente() {
             I dato = actual.getDato();

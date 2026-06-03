@@ -33,7 +33,14 @@ public class UnidadServicio {
      * Enumeración de los tipos de unidades de servicio disponibles.
      */
     public enum TipoUnidad {
-        GRUA, MOTO, CAMIONETA, VEHICULO_LIVIANO
+        /** Unidad tipo grúa. */
+        GRUA,
+        /** Unidad tipo moto. */
+        MOTO,
+        /** Unidad tipo camioneta. */
+        CAMIONETA,
+        /** Unidad tipo vehículo liviano. */
+        VEHICULO_LIVIANO
     }
 
     /**

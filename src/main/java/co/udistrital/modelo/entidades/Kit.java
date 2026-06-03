@@ -11,6 +11,9 @@ import java.util.Random;
  */
 public class Kit {
 
+    /**
+     * Generador de números aleatorios para decisiones de revisión.
+     */
     private static final Random RANDOM = new Random();
 
     /**

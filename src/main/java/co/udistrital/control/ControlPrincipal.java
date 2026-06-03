@@ -31,14 +31,49 @@ import co.udistrital.modelo.estructuras.Pila;
  */
 public class ControlPrincipal {
 
+    /**
+     * Lista de técnicos registrados.
+     */
     private ListaEnlazadaSimple<Tecnico> tecnicos;
+
+    /**
+     * Lista de unidades de servicio registradas.
+     */
     private ListaEnlazadaSimple<UnidadServicio> unidades;
+
+    /**
+     * Lista de clientes registrados.
+     */
     private ListaEnlazadaSimple<Cliente> clientes;
+
+    /**
+     * Historial completo de solicitudes del sistema.
+     */
     private ListaEnlazadaSimple<SolicitudServicio> todasLasSolicitudes;
+
+    /**
+     * Cola de solicitudes con prioridad ordinaria.
+     */
     private Cola<SolicitudServicio> colaOrdinarias;
+
+    /**
+     * Cola de solicitudes con prioridad crítica.
+     */
     private Cola<SolicitudServicio> colaCriticas;
+
+    /**
+     * Pila de kits disponibles para despacho.
+     */
     private Pila<Kit> pilaKitsDisponibles;
+
+    /**
+     * Pila de kits pendientes de revisión.
+     */
     private Pila<Kit> pilaKitsRevision;
+
+    /**
+     * Pila de movimientos para deshacer operaciones.
+     */
     private Pila<Movimiento> pilaMovimientos;
 
     /**
@@ -64,9 +99,6 @@ public class ControlPrincipal {
         });
     }
 
-    // =========================================================================
-    // TÉCNICOS
-    // =========================================================================
     /**
      * Registra un nuevo técnico.
      */
@@ -150,9 +182,6 @@ public class ControlPrincipal {
         return true;
     }
 
-    // =========================================================================
-    // UNIDADES
-    // =========================================================================
     /**
      * Registra una nueva unidad.
      */
@@ -232,9 +261,6 @@ public class ControlPrincipal {
         }
     }
 
-    // =========================================================================
-    // CLIENTES
-    // =========================================================================
     /**
      * Registra un nuevo cliente.
      */
@@ -288,9 +314,6 @@ public class ControlPrincipal {
         }
     }
 
-    // =========================================================================
-    // SOLICITUDES
-    // =========================================================================
     /**
      * Registra una nueva solicitud. La prioridad se calcula automáticamente:
      * puntos = cliente.tipo.puntos + zona.puntos + tipoServicio.puntos Si
@@ -455,13 +478,11 @@ public class ControlPrincipal {
             } else {
                 Tecnico.TipoServicio tipo = sol.getTipoServicio();
 
-                // Buscar técnico disponible con la especialidad requerida
                 Tecnico tec = buscarTecnicoDisponiblePorEspecialidad(tipo.getEspecialidadRequerida());
                 if (tec == null) {
                     return "Error: No hay técnico disponible con especialidad '"
                             + tipo.getEspecialidadRequerida().getNombre() + "' para este servicio.";
                 } else {
-                    // Buscar unidad disponible
                     UnidadServicio uni = buscarUnidadDisponible();
                     if (uni == null) {
                         return "Error: No hay unidades de servicio disponibles.";
@@ -473,12 +494,10 @@ public class ControlPrincipal {
                         kit.setEstado(EstadoKit.EN_USO);
                         sol.setKitAsignado(kit);
 
-                        // Guardar estados para Undo
                         EstadoTecnico estadoAntTec = tec.getEstado();
                         EstadoUnidad estadoAntUni = uni.getEstado();
                         EstadoSolicitud estadoAntSol = sol.getEstado();
 
-                        // Asignar recursos
                         tec.setEstado(EstadoTecnico.OCUPADO);
                         uni.setEstado(EstadoUnidad.OCUPADO);
                         sol.setTecnicoAsignado(tec);
@@ -486,7 +505,6 @@ public class ControlPrincipal {
                         sol.setKitAsignado(kit);
                         sol.setEstado(EstadoSolicitud.EN_PROCESO);
 
-                // Registrar movimiento con descripción simple
                 Movimiento mov = new Movimiento(Movimiento.TipoOperacion.ATENDER_SERVICIO,
                         "Servicio atendido: solicitud " + sol.getId());
                 mov.setSolicitud(sol);
@@ -585,6 +603,12 @@ public class ControlPrincipal {
         quitarKitDePila(pilaKitsDisponibles, kitObjetivo);
     }
 
+    /**
+     * Retira un kit específico de la pila indicada preservando el orden relativo.
+     *
+     * @param pila        Pila de kits a modificar.
+     * @param kitObjetivo Kit a retirar.
+     */
     private void quitarKitDePila(Pila<Kit> pila, Kit kitObjetivo) {
         if (kitObjetivo == null || pila.estaVacia()) {
             return;
@@ -633,9 +657,6 @@ public class ControlPrincipal {
         pilaKitsDisponibles.push(kit);
     }
 
-    // =========================================================================
-    // KITS
-    // =========================================================================
     /**
      * Agrega un nuevo kit a la pila de disponibles.
      */
@@ -698,18 +719,11 @@ public class ControlPrincipal {
         return pilaKitsRevision;
     }
 
-    // =========================================================================
-    // UNDO
-    // =========================================================================
     /**
-    *
-
-    Deshace la
-    última operación
-
-    registrada (inverso exacto según el estado actual).
+     * Deshace la última operación registrada (inverso exacto según el estado actual).
+     *
+     * @return Mensaje describiendo la operación revertida.
      */
-
     public String deshacerUltimaOperacion() {
         if (pilaMovimientos.estaVacia()) {
             return "No hay operaciones para deshacer.";
@@ -829,9 +843,6 @@ public class ControlPrincipal {
         }
     }
 
-    // =========================================================================
-    // REPORTES Y CSV
-    // =========================================================================
     /**
      * Genera reporte general del sistema.
      */

@@ -1,12 +1,29 @@
 package co.udistrital.vista;
 
-import co.udistrital.control.ControlVista;
-import co.udistrital.modelo.entidades.Tecnico;
-import co.udistrital.modelo.entidades.SolicitudServicio;
-import co.udistrital.modelo.entidades.Cliente;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+
+import co.udistrital.control.ControlVista;
+import co.udistrital.modelo.entidades.Cliente;
+import co.udistrital.modelo.entidades.SolicitudServicio;
+import co.udistrital.modelo.entidades.Tecnico;
 
 /**
  * Vista principal de AutoRescate 24/7 (Swing, patrón MVC). Solo captura eventos
@@ -170,7 +187,7 @@ public class VistaPrincipal extends JFrame {
         JMenu m = new JMenu("Kits");
         addItem(m, "Agregar kit", () -> cv.accionAgregarKit());
         addItem(m, "Consultar kits", () -> cv.accionConsultarKits());
-        addItem(m, "Revisar kit (cima de pila)", () -> cv.accionRevisarKit());
+        addItem(m, "Revisar kit", () -> cv.accionRevisarKit());
         menuBar.add(m);
     }
 

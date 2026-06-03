@@ -81,7 +81,7 @@ public class ControlPrincipal {
      * Busca técnico por id.
      */
     public Tecnico buscarTecnico(String id) {
-        ListaEnlazadaSimple.Iterador<Tecnico> it = tecnicos.iterador();
+        ListaEnlazadaSimple.Iterador<Tecnico> it = tecnicos.iterador(); // el iterador donde inicia???? en null? o en la primera posicion?
         while (it.tieneSiguiente()) {
             Tecnico t = it.siguiente();
             if (t.getId().equals(id)) {
@@ -503,8 +503,8 @@ public class ControlPrincipal {
                         // Registrar movimiento
                         Movimiento mov = new Movimiento(Movimiento.TipoOperacion.ASIGNAR_RECURSOS,
                                 "Asignación: Sol." + sol.getId() + " -> " + tec.getNombre()
-                                + " + Unidad [" + uni.getId() + "]"
-                                + (kit != null ? " + " + kit : ""));
+                                        + " + Unidad [" + uni.getId() + "]"
+                                        + (kit != null ? " + " + kit : ""));
                         mov.setSolicitud(sol);
                         mov.setTecnico(tec);
                         mov.setUnidad(uni);
@@ -554,12 +554,14 @@ public class ControlPrincipal {
             sol.getUnidadAsignada().setEstado(EstadoUnidad.DISPONIBLE);
             sol.setEstado(EstadoSolicitud.COMPLETADA);
 
+            Kit kitEnRevision = null;
             if (sol.getKitAsignado() != null) {
                 Kit kit = sol.getKitAsignado();
                 kit.asignarDecisionAleatoria();
                 kit.setEstado(EstadoKit.EN_REVISION);
                 pilaKitsRevision.push(kit);
                 iniciarProcesadoAutomaticoKit(kit);
+                kitEnRevision = kit;
             }
 
             Movimiento mov = new Movimiento(Movimiento.TipoOperacion.COMPLETAR_SERVICIO,
@@ -567,10 +569,18 @@ public class ControlPrincipal {
             mov.setSolicitud(sol);
             pilaMovimientos.push(mov);
 
+            final Kit kitNotificacion = kitEnRevision;
             SwingUtilities.invokeLater(() -> {
-                controlVista.notificarActualizacion(
-                        "Servicio " + sol.getId() + " completado. Técnico "
-                        + sol.getTecnicoAsignado().getNombre() + " disponible.");
+                if (kitNotificacion != null) {
+                    controlVista.notificarActualizacion(
+                            "Servicio " + sol.getId() + " completado. Kit-" + kitNotificacion.getId()
+                                    + " enviado a revisión (" + kitNotificacion.getDecision() + ").",
+                            true);
+                } else {
+                    controlVista.notificarActualizacion(
+                            "Servicio " + sol.getId() + " completado. Técnico "
+                                    + sol.getTecnicoAsignado().getNombre() + " disponible.");
+                }
                 intentarAtenderAutomaticamente();
             });
         }
@@ -581,28 +591,36 @@ public class ControlPrincipal {
      * pendiente en cola.
      */
     private void intentarAtenderAutomaticamente() {
+        intentarAtenderAutomaticamente(true);
+    }
+
+    /**
+     * Asigna automáticamente la siguiente solicitud pendiente.
+     *
+     * @param notificarVista si false, no cambia el panel (útil tras operaciones de kits).
+     */
+    private void intentarAtenderAutomaticamente(boolean notificarVista) {
         if (verSiguienteSolicitud() == null) {
             return;
         } else {
             String r = atenderSiguienteAutomatico();
+            if (!notificarVista || controlVista == null) {
+                return;
+            }
             if (r.startsWith("Servicio asignado")) {
-                if (controlVista != null) {
-                    controlVista.notificarActualizacion(r);
-                }
+                controlVista.notificarActualizacion(r);
             } else if (r.startsWith("Error:")) {
-                if (controlVista != null) {
-                    controlVista.notificarActualizacion("Solicitud en cola. " + r.substring(7));
-                }
+                controlVista.notificarActualizacion("Solicitud en cola. " + r.substring(7));
             }
         }
     }
 
     /**
-     * Inicia el procesado automático de un kit en revisión. El operario tarda 2
-     * segundos reales (20 min simulados).
+     * Inicia el procesado automático de un kit en revisión. El operario tarda 10
+     * segundos reales (100 min simulados).
      */
     private void iniciarProcesadoAutomaticoKit(Kit kit) {
-        Timer timer = new Timer(2000, e -> procesarKitAutomatico(kit));
+        Timer timer = new Timer(10000, e -> procesarKitAutomatico(kit));
         timer.setRepeats(false);
         timer.start();
     }
@@ -625,8 +643,8 @@ public class ControlPrincipal {
         }
         final String finalMsg = msg;
         SwingUtilities.invokeLater(() -> {
-            controlVista.notificarActualizacion(finalMsg);
-            intentarAtenderAutomaticamente();
+            controlVista.notificarActualizacion(finalMsg, true);
+            intentarAtenderAutomaticamente(false);
         });
     }
 
@@ -684,30 +702,6 @@ public class ControlPrincipal {
         } else {
             completarServicioAutomatico(sol);
             return "Servicio " + solicitudId + " completado.";
-        }
-    }
-
-    /**
-     * Revisa manualmente el kit en la cima de la pila de revisión.
-     *
-     * @param decision REPONER, REPARAR o NADA.
-     * @return Mensaje de resultado.
-     */
-    public String revisarKitEnCima(String decision) {
-        if (pilaKitsRevision.estaVacia()) {
-            return "No hay kits en revisión.";
-        } else {
-            Kit kit = pilaKitsRevision.pop();
-            if ("REPONER".equalsIgnoreCase(decision)) {
-                Kit nuevo = agregarKit();
-                return "Kit-" + kit.getId() + " repuesto. Nuevo kit: " + nuevo;
-            } else {
-                kit.setEstado(EstadoKit.LISTO);
-                kit.setDecision(null);
-                pilaKitsDisponibles.push(kit);
-                intentarAtenderAutomaticamente();
-                return "Kit-" + kit.getId() + " devuelto a disponibles.";
-            }
         }
     }
 
@@ -860,9 +854,9 @@ public class ControlPrincipal {
             }
         }
 
-        sb.append("\n-- KITS DISPONIBLES (cima): ");
+        sb.append("\n-- KITS DISPONIBLES: ");
         sb.append(pilaKitsDisponibles.estaVacia() ? "ninguno" : pilaKitsDisponibles.cima()).append("\n");
-        sb.append("-- KITS EN REVISIÓN (cima): ");
+        sb.append("-- KITS EN REVISIÓN: ");
         sb.append(pilaKitsRevision.estaVacia() ? "ninguno" : pilaKitsRevision.cima()).append("\n");
 
         sb.append("\n-- ÚLTIMO MOVIMIENTO --\n  ").append(verUltimaOperacion()).append("\n");

@@ -148,7 +148,6 @@ public class VistaPrincipal extends JFrame {
         JMenu m = new JMenu("Kits");
         addItem(m, "Agregar kit", () -> cv.accionAgregarKit());
         addItem(m, "Consultar kits", () -> cv.accionConsultarKits());
-        addItem(m, "Revisar kit en cima", () -> dialogoRevisarKit());
         menuBar.add(m);
     }
 
@@ -308,23 +307,6 @@ public class VistaPrincipal extends JFrame {
             return ts.getEspecialidadRequerida().getNombre() + "  |  "
                     + ts.getEspecialidadRequerida().getDuracionMinMin() + "-"
                     + ts.getEspecialidadRequerida().getDuracionMaxMin() + " min";
-        }
-    }
-
-    // =========================================================================
-    // DIÁLOGOS - KITS
-    // =========================================================================
-    private void dialogoRevisarKit() {
-        String[] opciones = {"Reparar (vuelve a LISTO)", "Reponer (nuevo kit)", "Sin novedad (vuelve a LISTO)"};
-        int sel = JOptionPane.showOptionDialog(this,
-                "¿Qué se hace con el kit en revisión?", "Revisar Kit",
-                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, opciones, opciones[0]);
-        if (sel == 0) {
-            cv.accionRevisarKitEnCima("REPARAR");
-        } else if (sel == 1) {
-            cv.accionRevisarKitEnCima("REPONER");
-        } else if (sel == 2) {
-            cv.accionRevisarKitEnCima("NADA");
         }
     }
 

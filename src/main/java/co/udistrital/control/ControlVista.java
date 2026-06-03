@@ -1,9 +1,13 @@
 package co.udistrital.control;
 
-import co.udistrital.modelo.entidades.*;
+import co.udistrital.modelo.entidades.Cliente;
+import co.udistrital.modelo.entidades.Kit;
+import co.udistrital.modelo.entidades.SolicitudServicio;
+import co.udistrital.modelo.entidades.Tecnico;
+import co.udistrital.modelo.entidades.Tecnico.EstadoTecnico;
+import co.udistrital.modelo.entidades.UnidadServicio;
 import co.udistrital.modelo.entidades.UnidadServicio.EstadoUnidad;
 import co.udistrital.modelo.entidades.UnidadServicio.TipoUnidad;
-import co.udistrital.modelo.entidades.Tecnico.EstadoTecnico;
 import co.udistrital.modelo.estructuras.ListaEnlazadaSimple;
 import co.udistrital.vista.VistaPrincipal;
 
@@ -22,7 +26,7 @@ public class ControlVista {
     /**
      * Construye el controlador de vista.
      *
-     * @param cp Controlador principal.
+     * @param cp    Controlador principal.
      * @param vista Vista principal.
      */
     public ControlVista(ControlPrincipal cp, VistaPrincipal vista) {
@@ -274,13 +278,27 @@ public class ControlVista {
     }
 
     /**
-     * Recibe notificaciones del modelo (timers) y actualiza la vista.
+     * Recibe notificaciones del modelo (timers) y actualiza la vista de solicitudes.
      *
      * @param mensaje Mensaje informativo del evento.
      */
     public void notificarActualizacion(String mensaje) {
+        notificarActualizacion(mensaje, false);
+    }
+
+    /**
+     * Recibe notificaciones del modelo y actualiza la vista indicada.
+     *
+     * @param mensaje   Mensaje informativo del evento.
+     * @param vistaKits true para mostrar el estado de las pilas de kits.
+     */
+    public void notificarActualizacion(String mensaje, boolean vistaKits) {
         vista.mostrarMensaje(mensaje);
-        vista.actualizarAreaTexto(listarSolicitudes());
+        if (vistaKits) {
+            vista.actualizarAreaTexto("▶ " + mensaje + "\n\n" + listarKits());
+        } else {
+            vista.actualizarAreaTexto(listarSolicitudes());
+        }
     }
 
     // ---- KITS ----
@@ -290,15 +308,6 @@ public class ControlVista {
     public void accionAgregarKit() {
         Kit kit = cp.agregarKit();
         vista.mostrarMensaje("Kit agregado: " + kit);
-        vista.actualizarAreaTexto(listarKits());
-    }
-
-    /**
-     * Revisa el kit en la cima de la pila de revisión.
-     */
-    public void accionRevisarKitEnCima(String decision) {
-        String r = cp.revisarKitEnCima(decision);
-        vista.mostrarMensaje(r);
         vista.actualizarAreaTexto(listarKits());
     }
 
@@ -512,37 +521,45 @@ public class ControlVista {
 
     private String listarKits() {
         StringBuilder sb = new StringBuilder();
+        int disp = cp.getPilaKitsDisponibles().getTamanno();
+        int rev = cp.getPilaKitsRevision().getTamanno();
+        sb.append("=== ESTADO DE KITS ===\n");
+        sb.append("  Disponibles: ").append(disp).append("  |  En revisión: ").append(rev).append("\n");
 
         sb.append("╔══════════════════════════════════════╗\n");
-        sb.append("║        KITS DISPONIBLES (PILA)       ║\n");
+        sb.append("║            KITS DISPONIBLES          ║\n");
         sb.append("╚══════════════════════════════════════╝\n");
         if (cp.pilaKitsDisponiblesVacia()) {
-            sb.append("  (pila vacía)\n");
+            sb.append("  (Sin kits disponibles)\n");
         } else {
-            sb.append("  ↑ TOPE (se usa primero)\n");
             co.udistrital.modelo.estructuras.Pila.Iterador<Kit> it = cp.getPilaKitsDisponibles().iterador();
             int pos = 1;
             while (it.tieneSiguiente()) {
                 Kit k = it.siguiente();
-                sb.append("  [").append(pos++).append("] ").append(k).append("\n");
+                sb.append("  [").append(pos++).append("] ").append(k);
+                if (pos == 2) {
+                    sb.append("  ← CIMA (próximo a despachar)");
+                }
+                sb.append("\n");
             }
-            sb.append("  ↓ FONDO\n");
         }
 
         sb.append("\n╔══════════════════════════════════════╗\n");
-        sb.append("║        KITS EN REVISIÓN (PILA)       ║\n");
+        sb.append("║            KITS EN REVISIÓN          ║\n");
         sb.append("╚══════════════════════════════════════╝\n");
         if (cp.pilaKitsRevisionVacia()) {
-            sb.append("  (pila vacía)\n");
+            sb.append("  (Sin kits en revisión)\n");
         } else {
-            sb.append("  ↑ TOPE (se revisa primero)\n");
             co.udistrital.modelo.estructuras.Pila.Iterador<Kit> it2 = cp.getPilaKitsRevision().iterador();
             int pos2 = 1;
             while (it2.tieneSiguiente()) {
                 Kit k = it2.siguiente();
-                sb.append("  [").append(pos2++).append("] ").append(k).append("\n");
+                sb.append("  [").append(pos2++).append("] ").append(k);
+                if (pos2 == 2) {
+                    sb.append("  ← CIMA (en proceso por operario)");
+                }
+                sb.append("\n");
             }
-            sb.append("  ↓ FONDO\n");
         }
         return sb.toString();
     }

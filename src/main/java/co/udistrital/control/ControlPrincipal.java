@@ -4,10 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Random;
-
 import javax.swing.SwingUtilities;
-import javax.swing.Timer;
 
 import co.udistrital.modelo.entidades.Cliente;
 import co.udistrital.modelo.entidades.Kit;
@@ -45,7 +42,6 @@ public class ControlPrincipal {
     private Pila<Movimiento> pilaMovimientos;
 
     private ControlVista controlVista;
-    private final Random random = new Random();
 
     /**
      * Construye el controlador principal, inicializa estructuras y arranca la
@@ -79,7 +75,6 @@ public class ControlPrincipal {
     public Tecnico registrarTecnico(String nombre, Tecnico.Especialidad especialidad) {
         Tecnico t = new Tecnico(String.valueOf(tecnicos.getTamanno() + 1), nombre, especialidad);
         tecnicos.agregar(t);
-        intentarAtenderAutomaticamente();
         return t;
     }
 
@@ -87,7 +82,8 @@ public class ControlPrincipal {
      * Busca técnico por id.
      */
     public Tecnico buscarTecnico(String id) {
-        ListaEnlazadaSimple.Iterador<Tecnico> it = tecnicos.iterador(); // el iterador donde inicia???? en null? o en la primera posicion?
+        ListaEnlazadaSimple.Iterador<Tecnico> it = tecnicos.iterador(); // el iterador donde inicia???? en null? o en la
+                                                                        // primera posicion?
         while (it.tieneSiguiente()) {
             Tecnico t = it.siguiente();
             if (t.getId().equals(id)) {
@@ -154,9 +150,6 @@ public class ControlPrincipal {
         mov.setTecnico(t);
         mov.setEstadoAnteriorTecnico(anterior);
         pilaMovimientos.push(mov);
-        if (estado == EstadoTecnico.DISPONIBLE) {
-            intentarAtenderAutomaticamente();
-        }
         return true;
     }
 
@@ -324,7 +317,6 @@ public class ControlPrincipal {
             } else {
                 colaOrdinarias.encolar(sol);
             }
-            intentarAtenderAutomaticamente();
             return sol;
         }
     }
@@ -399,8 +391,31 @@ public class ControlPrincipal {
         } else if (buscarUnidadDisponible() == null) {
             return false;
         } else {
-            return !pilaKitsDisponibles.estaVacia();
+            return solicitudTieneKitReservado(sol) || !pilaKitsDisponibles.estaVacia();
         }
+    }
+
+    /**
+     * @return true si la solicitud ya tiene un kit reservado en uso (p. ej. tras
+     *         deshacer completar).
+     */
+    private boolean solicitudTieneKitReservado(SolicitudServicio sol) {
+        Kit kit = sol.getKitAsignado();
+        return kit != null && kit.getEstado() == EstadoKit.EN_USO;
+    }
+
+    /**
+     * Retira el kit de las pilas y lo deja en estado EN_USO (asignado a una
+     * solicitud).
+     */
+    private void dejarKitEnUsoFueraDePilas(Kit kit) {
+        if (kit == null) {
+            return;
+        }
+        quitarKitDeRevision(kit);
+        quitarKitDeDisponibles(kit);
+        kit.setEstado(EstadoKit.EN_USO);
+        kit.setDecision(null);
     }
 
     /**
@@ -449,17 +464,13 @@ public class ControlPrincipal {
     }
 
     /**
-     * Asigna automáticamente técnico (por especialidad) y unidad disponible a
-     * la siguiente solicitud en cola. Inicia el timer de servicio
-     * automáticamente. Opcionalmente asigna un kit de la pila.
+     * Asigna técnico (por especialidad), unidad y kit a la siguiente solicitud
+     * atendible en cola (manual).
      *
-     * @param usarKit true si se debe asignar un kit de atención rápida.
      * @return Mensaje de resultado.
      */
-    public String atenderSiguienteAutomatico() {
-        if (pilaKitsDisponibles.estaVacia()) {
-            return "Error: No hay kits disponibles. Agregue kits antes de atender.";
-        } else if (buscarUnidadDisponible() == null) {
+    public String atenderSiguienteSolicitud() {
+        if (buscarUnidadDisponible() == null) {
             return "Error: No hay unidades de servicio disponibles.";
         } else {
             SolicitudServicio sol = desencolarPrimeraAtendible(colaCriticas);
@@ -467,7 +478,7 @@ public class ControlPrincipal {
                 sol = desencolarPrimeraAtendible(colaOrdinarias);
             }
             if (sol == null) {
-                return "Error: No hay solicitudes atendibles en este momento (faltan técnicos disponibles por especialidad).";
+                return "Error: No hay solicitudes atendibles en este momento (faltan técnicos, unidades o kits).";
             } else {
                 Tecnico.TipoServicio tipo = sol.getTipoServicio();
 
@@ -481,21 +492,22 @@ public class ControlPrincipal {
                     UnidadServicio uni = buscarUnidadDisponible();
                     if (uni == null) {
                         return "Error: No hay unidades de servicio disponibles.";
-                    } else if (pilaKitsDisponibles.estaVacia()) {
-                        return "Error: No hay kits disponibles. Agregue kits antes de atender.";
                     } else {
-                        Kit kit = pilaKitsDisponibles.pop();
-                        kit.setEstado(EstadoKit.EN_USO);
+                        Kit kit;
+                        if (solicitudTieneKitReservado(sol)) {
+                            kit = sol.getKitAsignado();
+                        } else if (pilaKitsDisponibles.estaVacia()) {
+                            return "Error: No hay kits disponibles. Agregue kits antes de atender.";
+                        } else {
+                            kit = pilaKitsDisponibles.pop();
+                            kit.setEstado(EstadoKit.EN_USO);
+                            sol.setKitAsignado(kit);
+                        }
 
                         // Guardar estados para Undo
                         EstadoTecnico estadoAntTec = tec.getEstado();
                         EstadoUnidad estadoAntUni = uni.getEstado();
                         EstadoSolicitud estadoAntSol = sol.getEstado();
-
-                        // Calcular duración aleatoria según el rango del TÉCNICO asignado
-                        long durMin = tec.getEspecialidad().getDuracionMinMs();
-                        long durMax = tec.getEspecialidad().getDuracionMaxMs();
-                        long duracionMs = durMin + (long) (random.nextDouble() * (durMax - durMin));
 
                         // Asignar recursos
                         tec.setEstado(EstadoTecnico.OCUPADO);
@@ -503,32 +515,23 @@ public class ControlPrincipal {
                         sol.setTecnicoAsignado(tec);
                         sol.setUnidadAsignada(uni);
                         sol.setKitAsignado(kit);
-                        sol.setDuracionMs(duracionMs);
                         sol.setEstado(EstadoSolicitud.EN_PROCESO);
 
-                        // Registrar movimiento
-                        Movimiento mov = new Movimiento(Movimiento.TipoOperacion.ASIGNAR_RECURSOS,
-                                "Asignación: Sol." + sol.getId() + " -> " + tec.getNombre()
-                                        + " + Unidad [" + uni.getId() + "]"
-                                        + (kit != null ? " + " + kit : ""));
-                        mov.setSolicitud(sol);
-                        mov.setTecnico(tec);
-                        mov.setUnidad(uni);
-                        mov.setKit(kit);
-                        mov.setEstadoAnteriorTecnico(estadoAntTec);
-                        mov.setEstadoAnteriorUnidad(estadoAntUni);
-                        mov.setEstadoAnteriorSolicitud(estadoAntSol);
-                        pilaMovimientos.push(mov);
+                // Registrar movimiento con descripción simple
+                Movimiento mov = new Movimiento(Movimiento.TipoOperacion.ATENDER_SERVICIO,
+                        "Servicio atendido: solicitud " + sol.getId());
+                mov.setSolicitud(sol);
+                mov.setTecnico(tec);
+                mov.setUnidad(uni);
+                mov.setKit(kit);
+                mov.setEstadoAnteriorTecnico(estadoAntTec);
+                mov.setEstadoAnteriorUnidad(estadoAntUni);
+                mov.setEstadoAnteriorSolicitud(estadoAntSol);
+                pilaMovimientos.push(mov);
 
-                        // Iniciar timer para completar el servicio automáticamente
-                        iniciarTimerServicio(sol, duracionMs);
-
-                        long minSimulados = duracionMs / 1000L * 10L;
                         return "Servicio asignado:\n  Técnico: " + tec.getNombre()
-                                + " (" + tec.getEspecialidad().getDuracionMinMin()
-                                + "-" + tec.getEspecialidad().getDuracionMaxMin() + " min)"
+                                + " (" + tec.getEspecialidad().getNombre() + ")"
                                 + "\n  Unidad: [" + uni.getId() + "] " + uni
-                                + "\n  Duración estimada: ~" + minSimulados + " min"
                                 + (kit != null ? "\n  Kit: " + kit : "");
                     }
                 }
@@ -537,22 +540,10 @@ public class ControlPrincipal {
     }
 
     /**
-     * Inicia un timer de Swing que completa el servicio automáticamente tras la
-     * duración indicada.
+     * Completa un servicio en proceso. Libera técnico y unidad, envía el kit a
+     * revisión con decisión aleatoria.
      */
-    private void iniciarTimerServicio(SolicitudServicio sol, long duracionMs) {
-        Timer timer = new Timer((int) duracionMs, e -> {
-            completarServicioAutomatico(sol);
-        });
-        timer.setRepeats(false);
-        timer.start();
-    }
-
-    /**
-     * Completa automáticamente un servicio al vencer su timer. Libera técnico y
-     * unidad, envía el kit a revisión con decisión aleatoria.
-     */
-    private void completarServicioAutomatico(SolicitudServicio sol) {
+    private void ejecutarCompletarServicio(SolicitudServicio sol) {
         if (sol.getEstado() != EstadoSolicitud.EN_PROCESO) {
             return;
         } else {
@@ -560,98 +551,54 @@ public class ControlPrincipal {
             sol.getUnidadAsignada().setEstado(EstadoUnidad.DISPONIBLE);
             sol.setEstado(EstadoSolicitud.COMPLETADA);
 
-            Kit kitEnRevision = null;
             if (sol.getKitAsignado() != null) {
                 Kit kit = sol.getKitAsignado();
                 kit.asignarDecisionAleatoria();
                 kit.setEstado(EstadoKit.EN_REVISION);
                 pilaKitsRevision.push(kit);
-                iniciarProcesadoAutomaticoKit(kit);
-                kitEnRevision = kit;
             }
 
-            Movimiento mov = new Movimiento(Movimiento.TipoOperacion.COMPLETAR_SERVICIO,
-                    "Servicio completado automáticamente: Solicitud " + sol.getId());
-            mov.setSolicitud(sol);
-            pilaMovimientos.push(mov);
-
-            final Kit kitNotificacion = kitEnRevision;
-            SwingUtilities.invokeLater(() -> {
-                if (kitNotificacion != null) {
-                    controlVista.notificarActualizacion(
-                            "Servicio " + sol.getId() + " completado. Kit-" + kitNotificacion.getId()
-                                    + " enviado a revisión (" + kitNotificacion.getDecision() + ").",
-                            true);
-                } else {
-                    controlVista.notificarActualizacion(
-                            "Servicio " + sol.getId() + " completado. Técnico "
-                                    + sol.getTecnicoAsignado().getNombre() + " disponible.");
-                }
-                intentarAtenderAutomaticamente();
-            });
+            Movimiento movCompletar = new Movimiento(Movimiento.TipoOperacion.COMPLETAR_SERVICIO,
+                    "Servicio completado: solicitud " + sol.getId());
+            movCompletar.setSolicitud(sol);
+            movCompletar.setTecnico(sol.getTecnicoAsignado());
+            movCompletar.setUnidad(sol.getUnidadAsignada());
+            movCompletar.setKit(sol.getKitAsignado());
+            movCompletar.setEstadoAnteriorTecnico(EstadoTecnico.OCUPADO);
+            movCompletar.setEstadoAnteriorUnidad(EstadoUnidad.OCUPADO);
+            movCompletar.setEstadoAnteriorSolicitud(EstadoSolicitud.EN_PROCESO);
+            pilaMovimientos.push(movCompletar);
         }
     }
 
     /**
-     * Asigna automáticamente técnico y unidad a la siguiente solicitud
-     * pendiente en cola.
-     */
-    private void intentarAtenderAutomaticamente() {
-        intentarAtenderAutomaticamente(true);
-    }
-
-    /**
-     * Asigna automáticamente la siguiente solicitud pendiente.
+     * Procesa el kit en la cima de la pila de revisión según su decisión.
      *
-     * @param notificarVista si false, no cambia el panel (útil tras operaciones de kits).
+     * @return Mensaje de resultado.
      */
-    private void intentarAtenderAutomaticamente(boolean notificarVista) {
-        if (verSiguienteSolicitud() == null) {
-            return;
-        } else {
-            String r = atenderSiguienteAutomatico();
-            if (!notificarVista || controlVista == null) {
-                return;
-            }
-            if (r.startsWith("Servicio asignado")) {
-                controlVista.notificarActualizacion(r);
-            } else if (r.startsWith("Error:")) {
-                controlVista.notificarActualizacion("Solicitud en cola. " + r.substring(7));
-            }
+    public String revisarKitEnRevision() {
+        if (pilaKitsRevision.estaVacia()) {
+            return "Error: No hay kits en revisión.";
         }
+        Kit kit = pilaKitsRevision.cima();
+        return aplicarRevisionKit(kit);
     }
 
     /**
-     * Inicia el procesado automático de un kit en revisión. El operario tarda 10
-     * segundos reales (100 min simulados).
+     * Aplica la decisión de revisión de un kit y lo retira de la pila.
      */
-    private void iniciarProcesadoAutomaticoKit(Kit kit) {
-        Timer timer = new Timer(10000, e -> procesarKitAutomatico(kit));
-        timer.setRepeats(false);
-        timer.start();
-    }
-
-    /**
-     * Procesa automáticamente un kit según su decisión de revisión.
-     */
-    private void procesarKitAutomatico(Kit kit) {
+    private String aplicarRevisionKit(Kit kit) {
         quitarKitDeRevision(kit);
         DecisionRevision dec = kit.getDecision();
-        String msg;
         if (dec == DecisionRevision.REPONER) {
             Kit nuevo = agregarKit();
-            msg = "Operario: Kit-" + kit.getId() + " repuesto → nuevo " + nuevo;
-        } else {
-            kit.setEstado(EstadoKit.LISTO);
-            kit.setDecision(null);
-            pilaKitsDisponibles.push(kit);
-            msg = "Operario: Kit-" + kit.getId() + " (" + dec + ") → devuelto a disponibles.";
+            return "Kit-" + kit.getId() + " repuesto → nuevo " + nuevo;
         }
-        final String finalMsg = msg;
-        SwingUtilities.invokeLater(() -> {
-            controlVista.notificarActualizacion(finalMsg, true);
-            intentarAtenderAutomaticamente(false);
-        });
+        kit.setEstado(EstadoKit.LISTO);
+        kit.setDecision(null);
+        pilaKitsDisponibles.push(kit);
+        return "Kit-" + kit.getId() + " (" + dec + ") → devuelto a disponibles.";
+
     }
 
     /**
@@ -659,24 +606,62 @@ public class ControlPrincipal {
      * relativo del resto de elementos.
      */
     private void quitarKitDeRevision(Kit kitObjetivo) {
-        if (kitObjetivo == null || pilaKitsRevision.estaVacia()) {
-            return;
-        } else {
-            Pila<Kit> temporal = new Pila<>();
-            boolean removido = false;
+        quitarKitDePila(pilaKitsRevision, kitObjetivo);
+    }
 
-            while (!pilaKitsRevision.estaVacia()) {
-                Kit actual = pilaKitsRevision.pop();
-                if (!removido && actual == kitObjetivo) {
-                    removido = true;
-                } else {
-                    temporal.push(actual);
-                }
-            }
-            while (!temporal.estaVacia()) {
-                pilaKitsRevision.push(temporal.pop());
+    /**
+     * Retira un kit de la pila de disponibles si está presente.
+     */
+    private void quitarKitDeDisponibles(Kit kitObjetivo) {
+        quitarKitDePila(pilaKitsDisponibles, kitObjetivo);
+    }
+
+    private void quitarKitDePila(Pila<Kit> pila, Kit kitObjetivo) {
+        if (kitObjetivo == null || pila.estaVacia()) {
+            return;
+        }
+        Pila<Kit> temporal = new Pila<>();
+        boolean removido = false;
+        while (!pila.estaVacia()) {
+            Kit actual = pila.pop();
+            if (!removido && actual == kitObjetivo) {
+                removido = true;
+            } else {
+                temporal.push(actual);
             }
         }
+        while (!temporal.estaVacia()) {
+            pila.push(temporal.pop());
+        }
+    }
+
+    /**
+     * Encola una solicitud pendiente evitando duplicados en las colas.
+     */
+    private void encolarSolicitud(SolicitudServicio sol) {
+        if (sol == null || sol.getEstado() != EstadoSolicitud.PENDIENTE) {
+            return;
+        }
+        quitarSolicitudDeColas(sol);
+        if (sol.getPrioridad() == Prioridad.CRITICA) {
+            colaCriticas.encolar(sol);
+        } else {
+            colaOrdinarias.encolar(sol);
+        }
+    }
+
+    /**
+     * Devuelve un kit a la pila de disponibles en estado LISTO.
+     */
+    private void devolverKitADisponibles(Kit kit) {
+        if (kit == null) {
+            return;
+        }
+        quitarKitDeRevision(kit);
+        quitarKitDeDisponibles(kit);
+        kit.setEstado(EstadoKit.LISTO);
+        kit.setDecision(null);
+        pilaKitsDisponibles.push(kit);
     }
 
     // =========================================================================
@@ -689,7 +674,6 @@ public class ControlPrincipal {
         Kit kit = new Kit(String.valueOf(
                 pilaKitsDisponibles.getTamanno() + pilaKitsRevision.getTamanno() + 1));
         pilaKitsDisponibles.push(kit);
-        intentarAtenderAutomaticamente();
         return kit;
     }
 
@@ -706,8 +690,14 @@ public class ControlPrincipal {
         } else if (sol.getEstado() != SolicitudServicio.EstadoSolicitud.EN_PROCESO) {
             return "Error: La solicitud no está en proceso.";
         } else {
-            completarServicioAutomatico(sol);
-            return "Servicio " + solicitudId + " completado.";
+            ejecutarCompletarServicio(sol);
+            StringBuilder sb = new StringBuilder("Servicio ").append(solicitudId).append(" completado.");
+            Kit kit = sol.getKitAsignado();
+            if (kit != null && kit.getEstado() == EstadoKit.EN_REVISION) {
+                sb.append("\nKit-").append(kit.getId())
+                        .append(" enviado a revisión (").append(kit.getDecision()).append(").");
+            }
+            return sb.toString();
         }
     }
 
@@ -743,61 +733,121 @@ public class ControlPrincipal {
     // UNDO
     // =========================================================================
     /**
-     * Deshace la última operación registrada.
+    *
+
+    Deshace la
+    última operación
+
+    registrada (inverso exacto según el estado actual).
      */
+
     public String deshacerUltimaOperacion() {
         if (pilaMovimientos.estaVacia()) {
             return "No hay operaciones para deshacer.";
-        } else {
-            Movimiento mov = pilaMovimientos.pop();
-            switch (mov.getTipoOperacion()) {
-                case ASIGNAR_RECURSOS:
-                    if (mov.getTecnico() != null) {
-                        mov.getTecnico().setEstado(mov.getEstadoAnteriorTecnico());
-                    }
-                    if (mov.getUnidad() != null) {
-                        mov.getUnidad().setEstado(mov.getEstadoAnteriorUnidad());
-                    }
-                    if (mov.getSolicitud() != null) {
-                        mov.getSolicitud().setEstado(mov.getEstadoAnteriorSolicitud());
-                        mov.getSolicitud().setTecnicoAsignado(null);
-                        mov.getSolicitud().setUnidadAsignada(null);
-                        if (mov.getKit() != null) {
-                            mov.getKit().setEstado(EstadoKit.LISTO);
-                            pilaKitsDisponibles.push(mov.getKit());
-                            mov.getSolicitud().setKitAsignado(null);
-                        }
-                        if (mov.getSolicitud().getPrioridad() == Prioridad.CRITICA) {
-                            colaCriticas.encolar(mov.getSolicitud());
-                        } else {
-                            colaOrdinarias.encolar(mov.getSolicitud());
-                        }
-                    }
-                    break;
-                case COMPLETAR_SERVICIO:
-                    if (mov.getTecnico() != null) {
-                        mov.getTecnico().setEstado(mov.getEstadoAnteriorTecnico());
-                    }
-                    if (mov.getUnidad() != null) {
-                        mov.getUnidad().setEstado(mov.getEstadoAnteriorUnidad());
-                    }
-                    if (mov.getSolicitud() != null) {
-                        mov.getSolicitud().setEstado(mov.getEstadoAnteriorSolicitud());
-                    }
-                    break;
-                case CAMBIAR_ESTADO_TECNICO:
-                    if (mov.getTecnico() != null) {
-                        mov.getTecnico().setEstado(mov.getEstadoAnteriorTecnico());
-                    }
-                    break;
-                case CAMBIAR_ESTADO_UNIDAD:
-                    if (mov.getUnidad() != null) {
-                        mov.getUnidad().setEstado(mov.getEstadoAnteriorUnidad());
-                    }
-                    break;
-            }
-            return "Operación deshecha: " + mov.getDescripcion();
         }
+        Movimiento mov = pilaMovimientos.pop();
+        String detalle;
+        switch (mov.getTipoOperacion()) {
+            case ATENDER_SERVICIO:
+            case ASIGNAR_RECURSOS:
+                detalle = deshacerAtenderServicio(mov);
+                break;
+            case COMPLETAR_SERVICIO:
+                detalle = deshacerCompletarServicio(mov);
+                break;
+            case CAMBIAR_ESTADO_TECNICO:
+                if (mov.getTecnico() != null) {
+                    mov.getTecnico().setEstado(mov.getEstadoAnteriorTecnico());
+                }
+                detalle = "Estado del técnico restaurado.";
+                break;
+            case CAMBIAR_ESTADO_UNIDAD:
+                if (mov.getUnidad() != null) {
+                    mov.getUnidad().setEstado(mov.getEstadoAnteriorUnidad());
+                }
+                detalle = "Estado de la unidad restaurado.";
+                break;
+            default:
+                detalle = "Operación revertida.";
+                break;
+        }
+        return "Operación deshecha: " + mov.getDescripcion() + "\n" + detalle;
+    }
+
+    /**
+     * Deshace atender servicio (solicitud debe estar EN_PROCESO).
+     */
+    private String deshacerAtenderServicio(Movimiento mov) {
+        SolicitudServicio sol = mov.getSolicitud();
+        if (sol == null) {
+            return "Sin solicitud asociada.";
+        }
+        if (sol.getEstado() == EstadoSolicitud.COMPLETADA) {
+            pilaMovimientos.push(mov);
+            return "Primero deshaga el movimiento de completar servicio (es el último en la pila).";
+        }
+        revertirAtencion(sol, mov);
+        return "Solicitud " + sol.getId() + " devuelta a la cola como PENDIENTE.";
+    }
+
+    /**
+     * Deshace completar servicio: vuelve a EN_PROCESO con recursos ocupados.
+     */
+    private String deshacerCompletarServicio(Movimiento mov) {
+        SolicitudServicio sol = mov.getSolicitud();
+        if (sol == null) {
+            return "Sin solicitud asociada.";
+        }
+        revertirCompletado(sol, mov);
+        return "Solicitud " + sol.getId() + " reanudada en proceso. El kit sigue en uso (no está en disponibles).";
+    }
+
+    /**
+     * Inverso de completar servicio: restaura EN_PROCESO, técnico/unidad ocupados y
+     * kit en uso.
+     */
+    private void revertirCompletado(SolicitudServicio sol, Movimiento mov) {
+        Tecnico tec = mov.getTecnico() != null ? mov.getTecnico() : sol.getTecnicoAsignado();
+        UnidadServicio uni = mov.getUnidad() != null ? mov.getUnidad() : sol.getUnidadAsignada();
+        Kit kit = mov.getKit() != null ? mov.getKit() : sol.getKitAsignado();
+
+        if (tec != null) {
+            tec.setEstado(EstadoTecnico.OCUPADO);
+            sol.setTecnicoAsignado(tec);
+        }
+        if (uni != null) {
+            uni.setEstado(EstadoUnidad.OCUPADO);
+            sol.setUnidadAsignada(uni);
+        }
+        if (kit != null) {
+            dejarKitEnUsoFueraDePilas(kit);
+            sol.setKitAsignado(kit);
+        }
+        quitarSolicitudDeColas(sol);
+        sol.setEstado(EstadoSolicitud.EN_PROCESO);
+    }
+
+    /**
+     * Inverso de atender servicio: libera recursos y reencola la solicitud.
+     */
+    private void revertirAtencion(SolicitudServicio sol, Movimiento mov) {
+        if (mov.getTecnico() != null) {
+            mov.getTecnico().setEstado(mov.getEstadoAnteriorTecnico());
+        }
+        if (mov.getUnidad() != null) {
+            mov.getUnidad().setEstado(mov.getEstadoAnteriorUnidad());
+        }
+        if (mov.getKit() != null) {
+            devolverKitADisponibles(mov.getKit());
+        }
+        sol.setTecnicoAsignado(null);
+        sol.setUnidadAsignada(null);
+        sol.setKitAsignado(null);
+        sol.setEstado(mov.getEstadoAnteriorSolicitud() != null
+                ? mov.getEstadoAnteriorSolicitud()
+                : EstadoSolicitud.PENDIENTE);
+        encolarSolicitud(sol);
+
     }
 
     /**
@@ -846,8 +896,7 @@ public class ControlPrincipal {
         while (itS.tieneSiguiente()) {
             SolicitudServicio s = itS.siguiente();
             if (s.getEstado() == EstadoSolicitud.EN_PROCESO) {
-                sb.append("  ").append(s)
-                        .append(" (~").append(s.getDuracionMs() / 1000L * 10L).append(" min)\n");
+                sb.append("  ").append(s).append("\n");
             }
         }
 

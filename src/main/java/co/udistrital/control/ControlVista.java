@@ -241,7 +241,7 @@ public class ControlVista {
             } else {
                 if (cp.pilaKitsDisponiblesVacia()) {
                     vista.mostrarMensaje("Solicitud registrada: " + sol
-                            + "\nNo hay kits disponibles. La solicitud queda en cola y se atenderá automáticamente cuando haya kits.");
+                            + "\nNo hay kits disponibles. Use «Atender siguiente solicitud» cuando haya recursos.");
                 } else {
                     vista.mostrarMensaje("Solicitud registrada: " + sol);
                 }
@@ -278,27 +278,58 @@ public class ControlVista {
     }
 
     /**
-     * Recibe notificaciones del modelo (timers) y actualiza la vista de
-     * solicitudes.
+     * Recibe notificaciones del modelo (asignación automática en cola).
      *
      * @param mensaje Mensaje informativo del evento.
      */
     public void notificarActualizacion(String mensaje) {
-        notificarActualizacion(mensaje, false);
+        vista.mostrarMensaje(mensaje);
     }
 
     /**
-     * Recibe notificaciones del modelo y actualiza la vista indicada.
+     * Recibe notificaciones del modelo con flag (ignorado, siempre solo popup).
      *
-     * @param mensaje   Mensaje informativo del evento.
-     * @param vistaKits true para mostrar el estado de las pilas de kits.
+     * @param mensaje  Mensaje informativo del evento.
+     * @param ignorado Parámetro mantenido por compatibilidad, no tiene efecto.
      */
-    public void notificarActualizacion(String mensaje, boolean vistaKits) {
+    public void notificarActualizacion(String mensaje, boolean ignorado) {
         vista.mostrarMensaje(mensaje);
-        if (vistaKits) {
-            vista.actualizarAreaTexto("▶ " + mensaje + "\n\n" + listarKits());
-        } else {
+    }
+
+    /**
+     * Asigna recursos a la siguiente solicitud pendiente atendible en cola.
+     */
+    public void accionAtenderSiguienteSolicitud() {
+        String r = cp.atenderSiguienteSolicitud();
+        vista.mostrarMensaje(r);
+        if (r.startsWith("Servicio asignado")) {
             vista.actualizarAreaTexto(listarSolicitudes());
+        }
+    }
+
+    /**
+     * Completa manualmente una solicitud en proceso.
+     */
+    public void accionCompletarServicio(String solicitudId) {
+        if (solicitudId == null || solicitudId.isBlank()) {
+            vista.mostrarMensaje("Error: Indique el ID de la solicitud.");
+            return;
+        }
+        String r = cp.completarServicio(solicitudId.trim());
+        vista.mostrarMensaje(r);
+        if (!r.startsWith("Error:")) {
+            vista.actualizarAreaTexto(listarSolicitudes());
+        }
+    }
+
+    /**
+     * Revisa el kit en la cima de la pila de kits en revisión.
+     */
+    public void accionRevisarKit() {
+        String r = cp.revisarKitEnRevision();
+        vista.mostrarMensaje(r);
+        if (!r.startsWith("Error:")) {
+            vista.actualizarAreaTexto(listarKits());
         }
     }
 
@@ -326,7 +357,6 @@ public class ControlVista {
     public void accionDeshacerUltimaOperacion() {
         String r = cp.deshacerUltimaOperacion();
         vista.mostrarMensaje(r);
-        vista.actualizarAreaTexto(cp.generarReporte());
     }
 
     // ---- REPORTES ----
@@ -411,8 +441,7 @@ public class ControlVista {
                         .append(s.getCliente().getNombre()).append(" | ")
                         .append(s.getTipoServicio().getNombre()).append(" | ")
                         .append(s.getPrioridad()).append(" | ")
-                        .append(esp.getDuracionMinMin()).append("-")
-                        .append(esp.getDuracionMaxMin()).append(" min\n");
+                        .append(esp.getNombre()).append("\n");
                 hay = true;
             }
         }
@@ -426,8 +455,7 @@ public class ControlVista {
                         .append(s.getCliente().getNombre()).append(" | ")
                         .append(s.getTipoServicio().getNombre()).append(" | ")
                         .append(s.getPrioridad()).append(" | ")
-                        .append(esp.getDuracionMinMin()).append("-")
-                        .append(esp.getDuracionMaxMin()).append(" min\n");
+                        .append(esp.getNombre()).append("\n");
                 hay = true;
             }
         }
@@ -447,8 +475,7 @@ public class ControlVista {
                         .append(s.getCliente().getNombre()).append(" | ")
                         .append(s.getTipoServicio().getNombre());
                 if (s.getTecnicoAsignado() != null) {
-                    sb.append(" | Técnico: ").append(s.getTecnicoAsignado().getNombre())
-                            .append(" (~").append(s.getDuracionMs() / 1000L * 10L).append(" min)");
+                    sb.append(" | Técnico: ").append(s.getTecnicoAsignado().getNombre());
                 }
                 if (s.getUnidadAsignada() != null) {
                     sb.append(" | Unidad: [").append(s.getUnidadAsignada().getId()).append("]");
@@ -469,8 +496,7 @@ public class ControlVista {
                         .append(s.getCliente().getNombre()).append(" | ")
                         .append(s.getTipoServicio().getNombre());
                 if (s.getTecnicoAsignado() != null) {
-                    sb.append(" | Técnico: ").append(s.getTecnicoAsignado().getNombre())
-                            .append(" (~").append(s.getDuracionMs() / 1000L * 10L).append(" min)");
+                    sb.append(" | Técnico: ").append(s.getTecnicoAsignado().getNombre());
                 }
                 if (s.getUnidadAsignada() != null) {
                     sb.append(" | Unidad: [").append(s.getUnidadAsignada().getId()).append("]");
@@ -521,10 +547,12 @@ public class ControlVista {
         StringBuilder sb = new StringBuilder();
         int disp = cp.getPilaKitsDisponibles().getTamanno();
         int rev = cp.getPilaKitsRevision().getTamanno();
+        int enUso = contarKitsEnUso();
         sb.append("ESTADO DE KITS:");
         sb.append("\n");
 
-        sb.append("  Disponibles: ").append(disp).append("  |  En revisión: ").append(rev).append("\n");
+        sb.append("  Disponibles: ").append(disp).append("  |  En revisión: ").append(rev)
+                .append("  |  En uso: ").append(enUso).append("\n");
 
         sb.append("\n");
         sb.append("KITS DISPONIBLES\n");
@@ -537,9 +565,7 @@ public class ControlVista {
             while (it.tieneSiguiente()) {
                 Kit k = it.siguiente();
                 sb.append("  [").append(pos++).append("] ").append(k);
-                if (pos == 2) {
-                    sb.append("  ← CIMA (próximo a despachar)");
-                }
+                
                 sb.append("\n");
             }
         }
@@ -553,12 +579,39 @@ public class ControlVista {
             while (it2.tieneSiguiente()) {
                 Kit k = it2.siguiente();
                 sb.append("  [").append(pos2++).append("] ").append(k);
-                if (pos2 == 2) {
-                    sb.append("  ← CIMA (en proceso por operario)");
-                }
+                
                 sb.append("\n");
             }
         }
+        sb.append("\n");
+        sb.append("KITS EN USO (asignados a solicitudes, no en pilas)\n");
+        if (enUso == 0) {
+            sb.append("  (Ninguno)\n");
+        } else {
+            ListaEnlazadaSimple.Iterador<SolicitudServicio> itSol = cp.getTodasLasSolicitudes().iterador();
+            int pos3 = 1;
+            while (itSol.tieneSiguiente()) {
+                SolicitudServicio s = itSol.siguiente();
+                Kit k = s.getKitAsignado();
+                if (k != null && k.getEstado() == Kit.EstadoKit.EN_USO) {
+                    sb.append("  [").append(pos3++).append("] ").append(k)
+                            .append(" → solicitud ").append(s.getId()).append("\n");
+                }
+            }
+        }
         return sb.toString();
+    }
+
+    private int contarKitsEnUso() {
+        int n = 0;
+        ListaEnlazadaSimple.Iterador<SolicitudServicio> it = cp.getTodasLasSolicitudes().iterador();
+        while (it.tieneSiguiente()) {
+            SolicitudServicio s = it.siguiente();
+            Kit k = s.getKitAsignado();
+            if (k != null && k.getEstado() == Kit.EstadoKit.EN_USO) {
+                n++;
+            }
+        }
+        return n;
     }
 }

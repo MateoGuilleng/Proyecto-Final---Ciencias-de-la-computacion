@@ -55,11 +55,6 @@ public class SolicitudServicio {
      */
     private Kit kitAsignado;
 
-    /**
-     * Duración real en ms asignada al iniciar el servicio.
-     */
-    private long duracionMs;
-
     // =========================================================================
     // ENUMS
     // =========================================================================
@@ -153,7 +148,6 @@ public class SolicitudServicio {
         this.tecnicoAsignado = null;
         this.unidadAsignada = null;
         this.kitAsignado = null;
-        this.duracionMs = 0;
 
         // Calcular prioridad automáticamente
         int puntos = cliente.getTipo().getPuntos()
@@ -254,20 +248,6 @@ public class SolicitudServicio {
      */
     public void setKitAsignado(Kit kit) {
         this.kitAsignado = kit;
-    }
-
-    /**
-     * @return Duración real en ms.
-     */
-    public long getDuracionMs() {
-        return duracionMs;
-    }
-
-    /**
-     * @param duracionMs Duración real en ms.
-     */
-    public void setDuracionMs(long duracionMs) {
-        this.duracionMs = duracionMs;
     }
 
     /**

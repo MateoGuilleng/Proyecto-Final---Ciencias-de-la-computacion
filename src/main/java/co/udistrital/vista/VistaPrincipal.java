@@ -140,6 +140,8 @@ public class VistaPrincipal extends JFrame {
         JMenu m = new JMenu("Solicitudes");
         addItem(m, "Registrar", () -> dialogoRegistrarSolicitud());
         addItem(m, "Consultar todas", () -> cv.accionConsultarSolicitudes());
+        addItem(m, "Atender siguiente solicitud", () -> cv.accionAtenderSiguienteSolicitud());
+        addItem(m, "Completar servicio", () -> dialogoCompletarServicio());
         addItem(m, "Eliminar solicitud", () -> dialogoEliminarSolicitud());
         menuBar.add(m);
     }
@@ -148,6 +150,7 @@ public class VistaPrincipal extends JFrame {
         JMenu m = new JMenu("Kits");
         addItem(m, "Agregar kit", () -> cv.accionAgregarKit());
         addItem(m, "Consultar kits", () -> cv.accionConsultarKits());
+        addItem(m, "Revisar kit (cima de pila)", () -> cv.accionRevisarKit());
         menuBar.add(m);
     }
 
@@ -290,6 +293,15 @@ public class VistaPrincipal extends JFrame {
         }
     }
 
+    private void dialogoCompletarServicio() {
+        String id = JOptionPane.showInputDialog(this,
+                "ID de la solicitud en proceso a completar:",
+                "Completar Servicio", JOptionPane.QUESTION_MESSAGE);
+        if (id != null && !id.isBlank()) {
+            cv.accionCompletarServicio(id.trim());
+        }
+    }
+
     private void dialogoEliminarSolicitud() {
         String id = JOptionPane.showInputDialog(this, "ID de la solicitud a eliminar:", "Eliminar Solicitud", JOptionPane.QUESTION_MESSAGE);
         if (id != null && !id.isBlank()) {
@@ -304,9 +316,7 @@ public class VistaPrincipal extends JFrame {
         if (ts == null) {
             return "";
         } else {
-            return ts.getEspecialidadRequerida().getNombre() + "  |  "
-                    + ts.getEspecialidadRequerida().getDuracionMinMin() + "-"
-                    + ts.getEspecialidadRequerida().getDuracionMaxMin() + " min";
+            return ts.getEspecialidadRequerida().getNombre();
         }
     }
 

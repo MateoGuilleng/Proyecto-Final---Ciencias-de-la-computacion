@@ -42,45 +42,31 @@ public class Tecnico {
         /**
          * Especialista en sistemas eléctricos del vehículo.
          */
-        ELECTRICIDAD_AUTOMOTRIZ("Electricidad Automotriz", 30, 50),
+        ELECTRICIDAD_AUTOMOTRIZ("Electricidad Automotriz"),
         /**
          * Especialista en mecánica general.
          */
-        MECANICA_GENERAL("Mecánica General", 20, 50),
+        MECANICA_GENERAL("Mecánica General"),
         /**
          * Especialista en operación de grúas y remolque.
          */
-        GRUAS_Y_REMOLQUE("Grúas y Remolque", 40, 60),
+        GRUAS_Y_REMOLQUE("Grúas y Remolque"),
         /**
          * Especialista en asistencia en carretera.
          */
-        ASISTENCIA_EN_CARRETERA("Asistencia en Carretera", 20, 40),
+        ASISTENCIA_EN_CARRETERA("Asistencia en Carretera"),
         /**
          * Especialista en motores diésel.
          */
-        MECANICA_DIESEL("Mecánica Diésel", 40, 60);
+        MECANICA_DIESEL("Mecánica Diésel");
 
         /**
          * Nombre descriptivo de la especialidad.
          */
         private final String nombre;
 
-        /**
-         * Duración mínima en minutos simulados para cualquier tarea de esta
-         * especialidad.
-         */
-        private final int duracionMinMin;
-
-        /**
-         * Duración máxima en minutos simulados para cualquier tarea de esta
-         * especialidad.
-         */
-        private final int duracionMaxMin;
-
-        Especialidad(String nombre, int duracionMinMin, int duracionMaxMin) {
+        Especialidad(String nombre) {
             this.nombre = nombre;
-            this.duracionMinMin = duracionMinMin;
-            this.duracionMaxMin = duracionMaxMin;
         }
 
         /**
@@ -88,38 +74,6 @@ public class Tecnico {
          */
         public String getNombre() {
             return nombre;
-        }
-
-        /**
-         * @return Duración mínima en minutos simulados.
-         */
-        public int getDuracionMinMin() {
-            return duracionMinMin;
-        }
-
-        /**
-         * @return Duración máxima en minutos simulados.
-         */
-        public int getDuracionMaxMin() {
-            return duracionMaxMin;
-        }
-
-        /**
-         * Duración mínima en milisegundos reales (1 seg = 10 min simulados).
-         *
-         * @return Milisegundos mínimos.
-         */
-        public long getDuracionMinMs() {
-            return (duracionMinMin / 10L) * 1000L;
-        }
-
-        /**
-         * Duración máxima en milisegundos reales (1 seg = 10 min simulados).
-         *
-         * @return Milisegundos máximos.
-         */
-        public long getDuracionMaxMs() {
-            return (duracionMaxMin / 10L) * 1000L;
         }
 
         @Override
@@ -258,8 +212,6 @@ public class Tecnico {
     @Override
     public String toString() {
         return "[" + id + "] " + nombre + " | " + especialidad.getNombre()
-                + " | " + estado
-                + " | " + especialidad.getDuracionMinMin() + "-"
-                + especialidad.getDuracionMaxMin() + " min";
+                + " | " + estado;
     }
 }

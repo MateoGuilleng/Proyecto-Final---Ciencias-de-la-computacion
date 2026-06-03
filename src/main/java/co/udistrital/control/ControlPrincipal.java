@@ -41,8 +41,6 @@ public class ControlPrincipal {
     private Pila<Kit> pilaKitsRevision;
     private Pila<Movimiento> pilaMovimientos;
 
-    private ControlVista controlVista;
-
     /**
      * Construye el controlador principal, inicializa estructuras y arranca la
      * GUI.
@@ -60,8 +58,8 @@ public class ControlPrincipal {
 
         SwingUtilities.invokeLater(() -> {
             co.udistrital.vista.VistaPrincipal vista = new co.udistrital.vista.VistaPrincipal();
-            controlVista = new ControlVista(this, vista);
-            vista.setControlVista(controlVista);
+            ControlVista cv = new ControlVista(this, vista);
+            vista.setControlVista(cv);
             vista.mostrar();
         });
     }
@@ -82,8 +80,7 @@ public class ControlPrincipal {
      * Busca técnico por id.
      */
     public Tecnico buscarTecnico(String id) {
-        ListaEnlazadaSimple.Iterador<Tecnico> it = tecnicos.iterador(); // el iterador donde inicia???? en null? o en la
-                                                                        // primera posicion?
+        ListaEnlazadaSimple.Iterador<Tecnico> it = tecnicos.iterador();
         while (it.tieneSiguiente()) {
             Tecnico t = it.siguiente();
             if (t.getId().equals(id)) {
@@ -117,7 +114,7 @@ public class ControlPrincipal {
      * @param especialidad Especialidad requerida.
      * @return El técnico disponible, o null si no hay ninguno.
      */
-    public Tecnico buscarTecnicoDisponiblePorEspecialidad(Tecnico.Especialidad especialidad) {
+    private Tecnico buscarTecnicoDisponiblePorEspecialidad(Tecnico.Especialidad especialidad) {
         ListaEnlazadaSimple.Iterador<Tecnico> it = tecnicos.iterador();
         while (it.tieneSiguiente()) {
             Tecnico t = it.siguiente();
@@ -365,21 +362,6 @@ public class ControlPrincipal {
     }
 
     /**
-     * Obtiene la siguiente solicitud a atender SIN desencolarla.
-     *
-     * @return La solicitud en el frente, o null si no hay.
-     */
-    public SolicitudServicio verSiguienteSolicitud() {
-        if (!colaCriticas.estaVacia()) {
-            return colaCriticas.verFrente();
-        } else if (!colaOrdinarias.estaVacia()) {
-            return colaOrdinarias.verFrente();
-        } else {
-            return null;
-        }
-    }
-
-    /**
      * Evalúa si una solicitud puede ser atendida ahora mismo según técnico
      * disponible por especialidad, unidad y kit.
      */
@@ -401,7 +383,9 @@ public class ControlPrincipal {
      */
     private boolean solicitudTieneKitReservado(SolicitudServicio sol) {
         Kit kit = sol.getKitAsignado();
-        return kit != null && kit.getEstado() == EstadoKit.EN_USO;
+        
+        return kit != null && kit.getEstado()  == EstadoKit.EN_USO;
+    
     }
 
     /**
@@ -749,7 +733,6 @@ public class ControlPrincipal {
         String detalle;
         switch (mov.getTipoOperacion()) {
             case ATENDER_SERVICIO:
-            case ASIGNAR_RECURSOS:
                 detalle = deshacerAtenderServicio(mov);
                 break;
             case COMPLETAR_SERVICIO:
@@ -807,9 +790,21 @@ public class ControlPrincipal {
      * kit en uso.
      */
     private void revertirCompletado(SolicitudServicio sol, Movimiento mov) {
-        Tecnico tec = mov.getTecnico() != null ? mov.getTecnico() : sol.getTecnicoAsignado();
-        UnidadServicio uni = mov.getUnidad() != null ? mov.getUnidad() : sol.getUnidadAsignada();
-        Kit kit = mov.getKit() != null ? mov.getKit() : sol.getKitAsignado();
+
+      
+        if (mov.getTecnico() != null) {
+            tec = mov.getTecnico();
+        }
+        
+        
+        if (mov.getUnidad() != null) {
+            uni = mov.getUnidad();
+        }
+        
+
+        if (mov.getKit() != null) {
+            kit = mov.getKit();
+        }
 
         if (tec != null) {
             tec.setEstado(EstadoTecnico.OCUPADO);

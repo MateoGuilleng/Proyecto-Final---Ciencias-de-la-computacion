@@ -9,6 +9,7 @@ import co.udistrital.modelo.entidades.UnidadServicio;
 import co.udistrital.modelo.entidades.UnidadServicio.EstadoUnidad;
 import co.udistrital.modelo.entidades.UnidadServicio.TipoUnidad;
 import co.udistrital.modelo.estructuras.ListaEnlazadaSimple;
+import co.udistrital.modelo.estructuras.Pila;
 import co.udistrital.vista.VistaPrincipal;
 
 /**
@@ -278,25 +279,6 @@ public class ControlVista {
     }
 
     /**
-     * Recibe notificaciones del modelo (asignación automática en cola).
-     *
-     * @param mensaje Mensaje informativo del evento.
-     */
-    public void notificarActualizacion(String mensaje) {
-        vista.mostrarMensaje(mensaje);
-    }
-
-    /**
-     * Recibe notificaciones del modelo con flag (ignorado, siempre solo popup).
-     *
-     * @param mensaje  Mensaje informativo del evento.
-     * @param ignorado Parámetro mantenido por compatibilidad, no tiene efecto.
-     */
-    public void notificarActualizacion(String mensaje, boolean ignorado) {
-        vista.mostrarMensaje(mensaje);
-    }
-
-    /**
      * Asigna recursos a la siguiente solicitud pendiente atendible en cola.
      */
     public void accionAtenderSiguienteSolicitud() {
@@ -560,7 +542,7 @@ public class ControlVista {
         if (cp.pilaKitsDisponiblesVacia()) {
             sb.append("  (Sin kits disponibles)\n");
         } else {
-            co.udistrital.modelo.estructuras.Pila.Iterador<Kit> it = cp.getPilaKitsDisponibles().iterador();
+            Pila.Iterador<Kit> it = cp.getPilaKitsDisponibles().iterador();
             int pos = 1;
             while (it.tieneSiguiente()) {
                 Kit k = it.siguiente();
@@ -574,7 +556,7 @@ public class ControlVista {
         if (cp.pilaKitsRevisionVacia()) {
             sb.append("  (Sin kits en revisión)\n");
         } else {
-            co.udistrital.modelo.estructuras.Pila.Iterador<Kit> it2 = cp.getPilaKitsRevision().iterador();
+            Pila.Iterador<Kit> it2 = cp.getPilaKitsRevision().iterador();
             int pos2 = 1;
             while (it2.tieneSiguiente()) {
                 Kit k = it2.siguiente();
@@ -584,7 +566,7 @@ public class ControlVista {
             }
         }
         sb.append("\n");
-        sb.append("KITS EN USO (asignados a solicitudes, no en pilas)\n");
+        sb.append("KITS EN USO \n");
         if (enUso == 0) {
             sb.append("  (Ninguno)\n");
         } else {

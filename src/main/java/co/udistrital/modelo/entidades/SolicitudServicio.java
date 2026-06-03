@@ -250,13 +250,6 @@ public class SolicitudServicio {
         this.kitAsignado = kit;
     }
 
-    /**
-     * @return true si tiene técnico, unidad y kit asignados.
-     */
-    public boolean tieneRecursosAsignados() {
-        return tecnicoAsignado != null && unidadAsignada != null && kitAsignado != null;
-    }
-
     @Override
     public String toString() {
         int puntos = cliente.getTipo().getPuntos() + zona.getPuntos() + tipoServicio.getPuntos();

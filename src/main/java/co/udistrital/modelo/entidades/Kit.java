@@ -4,8 +4,8 @@ import java.util.Random;
 
 /**
  * Representa un kit de atención rápida de la empresa AutoRescate 24/7. Al
- * regresar de un servicio se le asigna automáticamente una decisión de revisión
- * (REPARAR, REPONER o NADA), que el operario aplicará al procesarlo.
+ * regresar de un servicio se le asigna una decisión de revisión (REPARAR,
+ * REPONER o NADA), que el operario aplica manualmente al revisar el kit.
  *
  * @author AutoRescate 24/7
  */

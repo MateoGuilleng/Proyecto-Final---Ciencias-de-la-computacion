@@ -20,7 +20,6 @@ co\udistrital\modelo\entidades\UnidadServicio.class
 co\udistrital\control\ControlVista.class
 co\udistrital\modelo\entidades\SolicitudServicio$Zona.class
 co\udistrital\control\ControlPrincipal.class
-co\udistrital\control\ControlPrincipal$TimerKitRegistro.class
 co\udistrital\modelo\entidades\UnidadServicio$TipoUnidad.class
 co\udistrital\modelo\entidades\Cliente$TipoCliente.class
 co\udistrital\control\Launcher.class

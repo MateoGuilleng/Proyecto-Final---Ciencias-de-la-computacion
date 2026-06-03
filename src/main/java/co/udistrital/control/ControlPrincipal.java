@@ -373,19 +373,8 @@ public class ControlPrincipal {
         } else if (buscarUnidadDisponible() == null) {
             return false;
         } else {
-            return solicitudTieneKitReservado(sol) || !pilaKitsDisponibles.estaVacia();
+            return !pilaKitsDisponibles.estaVacia();
         }
-    }
-
-    /**
-     * @return true si la solicitud ya tiene un kit reservado en uso (p. ej. tras
-     *         deshacer completar).
-     */
-    private boolean solicitudTieneKitReservado(SolicitudServicio sol) {
-        Kit kit = sol.getKitAsignado();
-        
-        return kit != null && kit.getEstado()  == EstadoKit.EN_USO;
-    
     }
 
     /**
@@ -477,16 +466,12 @@ public class ControlPrincipal {
                     if (uni == null) {
                         return "Error: No hay unidades de servicio disponibles.";
                     } else {
-                        Kit kit;
-                        if (solicitudTieneKitReservado(sol)) {
-                            kit = sol.getKitAsignado();
-                        } else if (pilaKitsDisponibles.estaVacia()) {
+                        if (pilaKitsDisponibles.estaVacia()) {
                             return "Error: No hay kits disponibles. Agregue kits antes de atender.";
-                        } else {
-                            kit = pilaKitsDisponibles.pop();
-                            kit.setEstado(EstadoKit.EN_USO);
-                            sol.setKitAsignado(kit);
                         }
+                        Kit kit = pilaKitsDisponibles.pop();
+                        kit.setEstado(EstadoKit.EN_USO);
+                        sol.setKitAsignado(kit);
 
                         // Guardar estados para Undo
                         EstadoTecnico estadoAntTec = tec.getEstado();
@@ -790,21 +775,9 @@ public class ControlPrincipal {
      * kit en uso.
      */
     private void revertirCompletado(SolicitudServicio sol, Movimiento mov) {
-
-      
-        if (mov.getTecnico() != null) {
-            tec = mov.getTecnico();
-        }
-        
-        
-        if (mov.getUnidad() != null) {
-            uni = mov.getUnidad();
-        }
-        
-
-        if (mov.getKit() != null) {
-            kit = mov.getKit();
-        }
+        Tecnico tec = mov.getTecnico();
+        UnidadServicio uni = mov.getUnidad();
+        Kit kit = mov.getKit();
 
         if (tec != null) {
             tec.setEstado(EstadoTecnico.OCUPADO);

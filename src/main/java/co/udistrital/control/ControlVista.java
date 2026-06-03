@@ -278,7 +278,8 @@ public class ControlVista {
     }
 
     /**
-     * Recibe notificaciones del modelo (timers) y actualiza la vista de solicitudes.
+     * Recibe notificaciones del modelo (timers) y actualiza la vista de
+     * solicitudes.
      *
      * @param mensaje Mensaje informativo del evento.
      */
@@ -397,9 +398,8 @@ public class ControlVista {
      */
     public String listarSolicitudes() {
         StringBuilder sb = new StringBuilder();
-        sb.append("╔══════════════════════════════════════╗\n");
-        sb.append("║         SOLICITUDES PENDIENTES       ║\n");
-        sb.append("╚══════════════════════════════════════╝\n");
+        sb.append("SOLICITUDES PENDIENTES\n");
+
         boolean hay = false;
         ListaEnlazadaSimple.Iterador<SolicitudServicio> it = cp.getTodasLasSolicitudes().iterador();
         while (it.tieneSiguiente()) {
@@ -434,10 +434,9 @@ public class ControlVista {
         if (!hay) {
             sb.append("  (ninguna)\n");
         }
+        sb.append("\n");
+        sb.append("SOLICITUDES EN PROCESO\n");
 
-        sb.append("\n╔══════════════════════════════════════╗\n");
-        sb.append("║         SOLICITUDES EN PROCESO       ║\n");
-        sb.append("╚══════════════════════════════════════╝\n");
         it = cp.getTodasLasSolicitudes().iterador();
         hay = false;
         while (it.tieneSiguiente()) {
@@ -486,10 +485,9 @@ public class ControlVista {
         if (!hay) {
             sb.append("  (ninguna)\n");
         }
+        sb.append("\n");
+        sb.append("SOLICITUDES COMPLETADAS\n");
 
-        sb.append("\n╔══════════════════════════════════════╗\n");
-        sb.append("║        SOLICITUDES COMPLETADAS       ║\n");
-        sb.append("╚══════════════════════════════════════╝\n");
         it = cp.getTodasLasSolicitudes().iterador();
         hay = false;
         while (it.tieneSiguiente()) {
@@ -523,12 +521,14 @@ public class ControlVista {
         StringBuilder sb = new StringBuilder();
         int disp = cp.getPilaKitsDisponibles().getTamanno();
         int rev = cp.getPilaKitsRevision().getTamanno();
-        sb.append("=== ESTADO DE KITS ===\n");
+        sb.append("ESTADO DE KITS:");
+        sb.append("\n");
+
         sb.append("  Disponibles: ").append(disp).append("  |  En revisión: ").append(rev).append("\n");
 
-        sb.append("╔══════════════════════════════════════╗\n");
-        sb.append("║            KITS DISPONIBLES          ║\n");
-        sb.append("╚══════════════════════════════════════╝\n");
+        sb.append("\n");
+        sb.append("KITS DISPONIBLES\n");
+
         if (cp.pilaKitsDisponiblesVacia()) {
             sb.append("  (Sin kits disponibles)\n");
         } else {
@@ -543,10 +543,8 @@ public class ControlVista {
                 sb.append("\n");
             }
         }
-
-        sb.append("\n╔══════════════════════════════════════╗\n");
-        sb.append("║            KITS EN REVISIÓN          ║\n");
-        sb.append("╚══════════════════════════════════════╝\n");
+        sb.append("\n");
+        sb.append("KITS EN REVISIÓN\n");
         if (cp.pilaKitsRevisionVacia()) {
             sb.append("  (Sin kits en revisión)\n");
         } else {

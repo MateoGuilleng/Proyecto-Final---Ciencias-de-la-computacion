@@ -1,23 +1,29 @@
 package co.udistrital.control;
 
-import co.udistrital.modelo.entidades.*;
-import co.udistrital.modelo.entidades.SolicitudServicio.EstadoSolicitud;
-import co.udistrital.modelo.entidades.SolicitudServicio.Prioridad;
-import co.udistrital.modelo.entidades.Tecnico.EstadoTecnico;
-import co.udistrital.modelo.entidades.UnidadServicio.EstadoUnidad;
-import co.udistrital.modelo.entidades.Kit.EstadoKit;
-import co.udistrital.modelo.entidades.Kit.DecisionRevision;
-import co.udistrital.modelo.estructuras.ListaEnlazadaSimple;
-import co.udistrital.modelo.estructuras.Pila;
-import co.udistrital.modelo.estructuras.Cola;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Random;
 
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.util.Random;
+
+import co.udistrital.modelo.entidades.Cliente;
+import co.udistrital.modelo.entidades.Kit;
+import co.udistrital.modelo.entidades.Kit.DecisionRevision;
+import co.udistrital.modelo.entidades.Kit.EstadoKit;
+import co.udistrital.modelo.entidades.Movimiento;
+import co.udistrital.modelo.entidades.SolicitudServicio;
+import co.udistrital.modelo.entidades.SolicitudServicio.EstadoSolicitud;
+import co.udistrital.modelo.entidades.SolicitudServicio.Prioridad;
+import co.udistrital.modelo.entidades.Tecnico;
+import co.udistrital.modelo.entidades.Tecnico.EstadoTecnico;
+import co.udistrital.modelo.entidades.UnidadServicio;
+import co.udistrital.modelo.entidades.UnidadServicio.EstadoUnidad;
+import co.udistrital.modelo.estructuras.Cola;
+import co.udistrital.modelo.estructuras.ListaEnlazadaSimple;
+import co.udistrital.modelo.estructuras.Pila;
 
 /**
  * Controlador principal de la lógica de negocio de AutoRescate 24/7. Gestiona
@@ -812,21 +818,21 @@ public class ControlPrincipal {
      * Genera reporte general del sistema.
      */
     public String generarReporte() {
-        StringBuilder sb = new StringBuilder("===== REPORTE AUTORESCATE 24/7 =====\n\n");
+        StringBuilder sb = new StringBuilder("REPORTE AUTORESCATE 24/7:\n\n");
 
-        sb.append("-- TÉCNICOS (").append(tecnicos.getTamanno()).append(") --\n");
+        sb.append("TÉCNICOS: (").append(tecnicos.getTamanno()).append(")\n");
         ListaEnlazadaSimple.Iterador<Tecnico> itT = tecnicos.iterador();
         while (itT.tieneSiguiente()) {
             sb.append("  ").append(itT.siguiente()).append("\n");
         }
 
-        sb.append("\n-- UNIDADES (").append(unidades.getTamanno()).append(") --\n");
+        sb.append("\nUNIDADES:  (").append(unidades.getTamanno()).append(")\n");
         ListaEnlazadaSimple.Iterador<UnidadServicio> itU = unidades.iterador();
         while (itU.tieneSiguiente()) {
             sb.append("  ").append(itU.siguiente()).append("\n");
         }
 
-        sb.append("\n-- SOLICITUDES PENDIENTES --\n");
+        sb.append("\nSOLICITUDES PENDIENTES:\n");
         ListaEnlazadaSimple.Iterador<SolicitudServicio> itS = todasLasSolicitudes.iterador();
         while (itS.tieneSiguiente()) {
             SolicitudServicio s = itS.siguiente();
@@ -835,7 +841,7 @@ public class ControlPrincipal {
             }
         }
 
-        sb.append("\n-- SOLICITUDES EN PROCESO --\n");
+        sb.append("\nSOLICITUDES EN PROCESO:\n");
         itS = todasLasSolicitudes.iterador();
         while (itS.tieneSiguiente()) {
             SolicitudServicio s = itS.siguiente();
@@ -845,7 +851,7 @@ public class ControlPrincipal {
             }
         }
 
-        sb.append("\n-- SOLICITUDES COMPLETADAS --\n");
+        sb.append("\nSOLICITUDES COMPLETADAS:\n");
         itS = todasLasSolicitudes.iterador();
         while (itS.tieneSiguiente()) {
             SolicitudServicio s = itS.siguiente();
@@ -854,12 +860,12 @@ public class ControlPrincipal {
             }
         }
 
-        sb.append("\n-- KITS DISPONIBLES: ");
+        sb.append("\nKITS DISPONIBLES: ");
         sb.append(pilaKitsDisponibles.estaVacia() ? "ninguno" : pilaKitsDisponibles.cima()).append("\n");
-        sb.append("-- KITS EN REVISIÓN: ");
+        sb.append("KITS EN REVISIÓN: ");
         sb.append(pilaKitsRevision.estaVacia() ? "ninguno" : pilaKitsRevision.cima()).append("\n");
 
-        sb.append("\n-- ÚLTIMO MOVIMIENTO --\n  ").append(verUltimaOperacion()).append("\n");
+        sb.append("\nÚLTIMO MOVIMIENTO\n  ").append(verUltimaOperacion()).append("\n");
         return sb.toString();
     }
 
@@ -962,8 +968,8 @@ public class ControlPrincipal {
             return "Error al leer el archivo: " + e.getMessage();
         }
         return String.format(
-                "Importación completada:\n  Clientes: %d\n  Técnicos: %d\n  Unidades: %d\n  Kits: %d\n  Solicitudes: %d\n  Errores: %d",
-                cli, tec, uni, kit, sol, err);
+                "Importación completada:\n  Clientes: %d\n  Técnicos: %d\n  Unidades: %d\n  Kits: %d\n  Solicitudes: %d\n",
+                cli, tec, uni, kit, sol);
     }
 
 }

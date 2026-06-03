@@ -355,7 +355,7 @@ public class ControlVista {
 
     // ---- HELPERS ----
     private String listarTecnicos() {
-        StringBuilder sb = new StringBuilder("=== TÉCNICOS ===\n");
+        StringBuilder sb = new StringBuilder("TÉCNICOS:\n");
         ListaEnlazadaSimple.Iterador<Tecnico> it = cp.getTecnicos().iterador();
         if (!it.tieneSiguiente()) {
             sb.append("  (Sin técnicos registrados)\n");
@@ -368,7 +368,7 @@ public class ControlVista {
     }
 
     private String listarUnidades() {
-        StringBuilder sb = new StringBuilder("=== UNIDADES DE SERVICIO ===\n");
+        StringBuilder sb = new StringBuilder("UNIDADES DE SERVICIO:\n");
         ListaEnlazadaSimple.Iterador<UnidadServicio> it = cp.getUnidades().iterador();
         if (!it.tieneSiguiente()) {
             sb.append("  (Sin unidades registradas)\n");
@@ -381,7 +381,7 @@ public class ControlVista {
     }
 
     private String listarClientes() {
-        StringBuilder sb = new StringBuilder("=== CLIENTES ===\n");
+        StringBuilder sb = new StringBuilder("CLIENTES:\n");
         ListaEnlazadaSimple.Iterador<Cliente> it = cp.getClientes().iterador();
         if (!it.tieneSiguiente()) {
             sb.append("  (Sin clientes registrados)\n");

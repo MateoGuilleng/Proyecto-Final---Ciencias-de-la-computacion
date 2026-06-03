@@ -30,6 +30,7 @@
                     <docencoding>UTF-8</docencoding>
                     <charset>UTF-8</charset>
                     <doclint>none</doclint>
+                    <outputDirectory>${project.build.directory}/apidocs</outputDirectory>
                 </configuration>
             </plugin>
         </plugins>
